@@ -11,6 +11,7 @@ GPU acceleration support (CUDA)
 Model checkpoint saving (best_model.pth)
 
 🗂️ Project Structure
+
 <img width="480" height="399" alt="image" src="https://github.com/user-attachments/assets/5d9de5c9-d5a0-4b9a-97b3-75aa8175555c" />
 
 
