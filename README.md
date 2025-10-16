@@ -9,28 +9,10 @@ Automated data preprocessing and augmentation
 Real-time training progress visualization with tqdm
 GPU acceleration support (CUDA)
 Model checkpoint saving (best_model.pth)
+<img width="486" height="397" alt="image" src="https://github.com/user-attachments/assets/a5588cf6-34e0-4c1c-b3f5-bdb9b689743b" />
 
 🗂️ Project Structure
-BREASTCANCERPREDICTION_BCP/
-│
-├── data/
-│   ├── raw/              # Original dataset (too large, not uploaded)
-│   └── processed/        # Organized dataset (benign/malignant folders)
-│
-├── models/
-│   └── best_model.pth    # Best-performing trained model
-│
-├── src/
-│   ├── data_loader.py    # Dataset loading and splitting
-│   ├── model.py          # CNN architecture
-│   ├── organize_dataset.py # Dataset organization script
-│   └── train_model.py    # Training and validation loop
-│
-├── ui/                   # (Future UI for user interaction)
-├── notebooks/            # Jupyter notebooks for experiments
-│
-├── requirements.txt      # Dependencies
-└── README.md             # Project description
+![Uploading image.png…]()
 
 ⚙️ Installation
 1️⃣ Clone the repository
