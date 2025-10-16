@@ -63,3 +63,19 @@ Section	Description
 ℹ️ About	Project overview, developer info, and version notes
 🖼️ UI Preview (optional)
 #i will add image
+
+🤔 Prediction
+<img width="1920" height="1568" alt="image" src="https://github.com/user-attachments/assets/19197114-5010-4dd0-9d29-68b0ab0f91fb" />
+
+🔎 Analysis Panel
+<img width="1920" height="1902" alt="image" src="https://github.com/user-attachments/assets/c182913a-66a5-4968-be4a-d795eec88e72" />
+
+📈 Model Performance
+<img width="1920" height="2914" alt="image" src="https://github.com/user-attachments/assets/52953bfb-0aaa-4ce5-90b2-135cf2fcd12d" />
+
+🙍‍♂️ About
+<img width="1920" height="1363" alt="image" src="https://github.com/user-attachments/assets/0fb76e75-5822-4e9f-9c60-5af842a48fc0" />
+
+
+
+
