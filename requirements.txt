@@ -6,3 +6,7 @@ matplotlib
 tqdm
 scikit-learn
 opencv-python
+streamlit
+pillow
+plotly
+reportlab
