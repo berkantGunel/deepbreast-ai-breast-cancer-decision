@@ -11,26 +11,8 @@ GPU acceleration support (CUDA)
 Model checkpoint saving (best_model.pth)
 
 🗂️ Project Structure
-BREASTCANCERPREDICTION_BCP/
-│
-├── data/
-│   ├── raw/              # Original dataset (too large, not uploaded)
-│   └── processed/        # Organized dataset (benign/malignant folders)
-│
-├── models/
-│   └── best_model.pth    # Best-performing trained model
-│
-├── src/
-│   ├── data_loader.py    # Dataset loading and splitting
-│   ├── model.py          # CNN architecture
-│   ├── organize_dataset.py # Dataset organization script
-│   └── train_model.py    # Training and validation loop
-│
-├── ui/                   # (Future UI for user interaction)
-├── notebooks/            # Jupyter notebooks for experiments
-│
-├── requirements.txt      # Dependencies
-└── README.md             # Project description
+![Uploading image.png…]()
+
 
 ⚙️ Installation
 1️⃣ Clone the repository
