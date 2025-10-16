@@ -1,0 +1,59 @@
+# ------------------------
+# Python general
+# ------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+*.csv
+*.json
+*.ipynb_checkpoints/
+
+# ------------------------
+# Virtual environments
+# ------------------------
+venv/
+env/
+.venv/
+.idea/
+.vscode/
+.DS_Store
+
+# ------------------------
+# Model weights / outputs
+# ------------------------
+*.pth
+*.pt
+*.onnx
+*.h5
+*.ckpt
+
+# ------------------------
+# Data folders (too large for GitHub)
+# ------------------------
+data/raw/
+data/processed/
+notebooks/
+ui/__pycache__/
+models/
+!models/.gitkeep  # Keep folder but ignore large files inside
+
+# ------------------------
+# Jupyter Notebook temporary
+# ------------------------
+*.nbconvert.ipynb
+*.ipynb_checkpoints/
+
+# ------------------------
+# System / cache files
+# ------------------------
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ------------------------
+# Environment files
+# ------------------------
+.env
+*.env
