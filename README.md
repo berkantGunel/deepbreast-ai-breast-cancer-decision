@@ -2,6 +2,7 @@
 📘 Overview
 This project focuses on developing a deep learning-based Convolutional Neural Network (CNN) to classify histopathological breast tissue images as benign or malignant.
 The model automatically learns hierarchical image features and assists in AI-supported early diagnosis of breast cancer.
+py -3.10 -m streamlit run app.py
 
 🧩 Key Features
 CNN architecture optimized for histopathological image classification
@@ -14,23 +15,37 @@ Model checkpoint saving (best_model.pth)
 BREASTCANCERPREDICTION_BCP/
 │
 ├── data/
-│   ├── raw/              # Original dataset (too large, not uploaded)
-│   └── processed/        # Organized dataset (benign/malignant folders)
+│ ├── raw/ # Original dataset (too large, not uploaded)
+│ └── processed/ # Organized dataset (benign/malignant folders)
 │
 ├── models/
-│   └── best_model.pth    # Best-performing trained model
+│ └── best_model.pth # Best-performing trained model
 │
 ├── src/
-│   ├── data_loader.py    # Dataset loading and splitting
-│   ├── model.py          # CNN architecture
-│   ├── organize_dataset.py # Dataset organization script
-│   └── train_model.py    # Training and validation loop
+│ ├── core/ # Core components
+│ │ ├── model.py # CNN architecture
+│ │ ├── data_loader.py # Dataset loading and splitting
+│ │ └── xai_visualizer.py # Grad-CAM implementation
+│ │
+│ ├── training/ # Training and evaluation
+│ │ ├── train_model.py # Training and validation loop
+│ │ ├── evaluate_model.py # Model evaluation script
+│ │ └── organize_dataset.py # Dataset organization script
+│ │
+│ ├── ui/ # Streamlit interface
+│ │ ├── app.py # Main Streamlit application
+│ │ ├── predict.py # Prediction panel
+│ │ ├── analysis_panel.py # Grad-CAM analysis panel
+│ │ ├── performance.py # Performance metrics dashboard
+│ │ └── about.py # About page
+│ │
+│ └── scripts/ # Standalone test scripts
+│ └── test_xai.py # XAI testing script
 │
-├── ui/                   # (Future UI for user interaction)
-├── notebooks/            # Jupyter notebooks for experiments
-│
-├── requirements.txt      # Dependencies
-└── README.md             # Project description
+├── app.py # Streamlit entry point (wrapper)
+├── notebooks/ # Jupyter notebooks for experiments
+├── requirements.txt # Dependencies
+└── README.md # Project description
 
 ⚙️ Installation
 1️⃣ Clone the repository
@@ -44,23 +59,32 @@ pip install -r requirements.txt
 Download the Breast Histopathology Images dataset from Kaggle:
 https://www.kaggle.com/datasets/paultimothymooney/breast-histopathology-images
 Then organize it
-python src/organize_dataset.py
+python src/training/organize_dataset.py
 
 🚀 Training
 Run model training:
-py 3.10 src/train_model.py
+python src/training/train_model.py
+
+📊 Evaluation
+Run model evaluation:
+python src/training/evaluate_model.py
+
+🧪 Testing
+Test XAI/Grad-CAM visualization:
+python src/scripts/test_xai.py
 
 📊 Results
-Metric	Value
-Best Validation Accuracy	~90%
-Loss Function	CrossEntropyLoss
-Optimizer	Adam (lr=0.001)
+Metric Value
+Best Validation Accuracy ~90%
+Loss Function CrossEntropyLoss
+Optimizer Adam (lr=0.001)
 
 🎯 Future Work
 Add web-based UI for image upload & prediction
 Integrate Grad-CAM visualization for explainability
 Perform hyperparameter tuning for higher accuracy
 In the future, this framework can be extended to analyze mammogram images for early-stage cancer detection using transfer learning models such as ResNet50 or EfficientNet.
+(Maybe https://www.kaggle.com/datasets/andrewmvd/lung-and-colon-cancer-histopathological-images)
 
 👨‍💻 Author
 
@@ -73,10 +97,10 @@ The project now includes a fully interactive Streamlit interface designed for me
 Users can upload histopathology images, view predictions, interpret Grad-CAM visualizations, and export performance reports in PDF format.
 
 Interface Sections:
-Section	Description
-🧭 Prediction	Upload tissue images → View predicted label (Benign / Malignant), confidence score, and inference time
-📊 Analysis	Grad-CAM heatmaps and transparency control for model interpretability
-📈 Performance	Live training logs, validation curves, confusion matrix, and downloadable PDF reports
-ℹ️ About	Project overview, developer info, and version notes
+Section Description
+🧭 Prediction Upload tissue images → View predicted label (Benign / Malignant), confidence score, and inference time
+📊 Analysis Grad-CAM heatmaps and transparency control for model interpretability
+📈 Performance Live training logs, validation curves, confusion matrix, and downloadable PDF reports
+ℹ️ About Project overview, developer info, and version notes
 🖼️ UI Preview (optional)
 #i will add image

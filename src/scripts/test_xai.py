@@ -1,5 +1,13 @@
-from xai_visualizer import generate_gradcam
-from model import BreastCancerCNN
+"""Quick manual test harness for verifying Grad-CAM overlays outside the
+Streamlit interface."""
+
+import sys
+from pathlib import Path
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+from src.core.xai_visualizer import generate_gradcam
+from src.core.model import BreastCancerCNN
 import torch
 
 device = "cuda" if torch.cuda.is_available() else "cpu"

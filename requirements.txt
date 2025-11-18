@@ -1,3 +1,5 @@
+# Core dependencies required for data preparation, training, explainability,
+# and the Streamlit user interface.
 torch
 torchvision
 numpy

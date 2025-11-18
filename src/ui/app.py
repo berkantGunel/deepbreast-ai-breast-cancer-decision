@@ -1,11 +1,19 @@
+"""Streamlit entry point that assembles navigation, layout, and shared UI
+elements for the DeepBreast application."""
+
+import sys
+from pathlib import Path
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import streamlit as st
 import os
 import base64
 
-from predict import run_prediction
-from analysis_panel import run_analysis
-from performance import run_performance
-from about import run_about
+from src.ui.predict import run_prediction
+from src.ui.analysis_panel import run_analysis
+from src.ui.performance import run_performance
+from src.ui.about import run_about
 
 # ======================================================
 # 🩺 Streamlit Config
@@ -17,24 +25,25 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ======================================================
-# 🧬 Logo Base64 Loader
-# ======================================================
+#Logo Base64 Loader
+#Btw base64:Converts data (images) to ASCII characters.
 def load_base64_image(path):
     """Convert an image file into base64 for inline display."""
     with open(path, "rb") as img_file:
         return base64.b64encode(img_file.read()).decode()
 
-# Logo path (main directory -> logo_assets/deep_breast.png)
-logo_path = os.path.join(os.path.dirname(__file__), "..", "logo_assets", "deep_breast.png")
-if os.path.exists(logo_path):
-    logo_base64 = load_base64_image(logo_path)
+#Logo path (main directory -> logo_assets/deep_breast.png)
+# Get project root directory (3 levels up from src/ui/app.py)
+project_root = Path(__file__).parent.parent.parent
+logo_path = project_root / "logo_assets" / "deep_breast.png"
+if logo_path.exists():
+    logo_base64 = load_base64_image(str(logo_path))
+    print(f"[DEBUG] Logo loaded from: {logo_path}")
 else:
     logo_base64 = ""  # fallback if missing
+    print(f"[WARNING] Logo not found at: {logo_path}")
 
-# ======================================================
-# 🎨 Custom Header
-# ======================================================
+#Custom header
 def app_header():
     header_html = f"""
     <style>
@@ -87,9 +96,7 @@ def app_header():
     """
     st.markdown(header_html, unsafe_allow_html=True)
 
-# ======================================================
-# 🎨 Custom Footer
-# ======================================================
+#Custom footer
 def app_footer():
     footer_html = """
     <hr>
@@ -100,9 +107,7 @@ def app_footer():
     """
     st.markdown(footer_html, unsafe_allow_html=True)
 
-# ======================================================
-# 🧭 Sidebar Navigation
-# ======================================================
+#sidebar navigation
 st.sidebar.title("🧭 Navigation")
 page = st.sidebar.radio("Go to:", [
     "🔍 Prediction",
@@ -111,9 +116,7 @@ page = st.sidebar.radio("Go to:", [
     "⚙️ About"
 ])
 
-# ======================================================
-# 🚀 Main Layout
-# ======================================================
+#main layout
 app_header()
 
 if page == "🔍 Prediction":

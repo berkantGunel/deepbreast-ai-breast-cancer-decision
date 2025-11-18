@@ -1,3 +1,6 @@
+"""Streamlit dashboard showing training/evaluation metrics and exporting a
+summarized PDF performance report."""
+
 import streamlit as st
 import json
 import os
@@ -10,9 +13,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 import datetime
 
-# ==========================================================
-# 📈 Model Performance Panel (Interactive + PDF Export)
-# ==========================================================
+#Model Performance Panel (Interactive + PDF Export)
 def run_performance():
     st.title("📈 Model Performance Dashboard (Interactive)")
     st.write("""
@@ -30,9 +31,7 @@ def run_performance():
         st.warning("⚠️ Evaluation results not found. Please run `evaluate_model.py`.")
         return
 
-    # ------------------------------------------------------
-    # 🔹 Load Training Logs
-    # ------------------------------------------------------
+    #Load Training Logs
     with open(history_path, "r") as f:
         history = json.load(f)
 
@@ -41,10 +40,8 @@ def run_performance():
     val_acc = [a * 100 for a in history["val_acc"]]
     train_loss = history["train_loss"]
     val_loss = history["val_loss"]
-
-    # ------------------------------------------------------
-    # 🔹 Load Evaluation Results
-    # ------------------------------------------------------
+    
+    #Load Evaluation Results
     with open(eval_path, "r") as f:
         results = json.load(f)
 
@@ -53,9 +50,8 @@ def run_performance():
     f1 = results["f1"]
     cm = np.array(results["confusion_matrix"])
 
-    # ------------------------------------------------------
-    # 📊 Plotly Charts (Interactive)
-    # ------------------------------------------------------
+
+    # Plotly Charts (Interactive)
     st.subheader("📊 Training Progress")
 
     acc_fig = go.Figure()
@@ -78,9 +74,7 @@ def run_performance():
 
     st.divider()
 
-    # ------------------------------------------------------
-    # 🧠 Evaluation Metrics (Interactive)
-    # ------------------------------------------------------
+    #Evaluation Metrics (Interactive)
     st.subheader("📈 Evaluation Metrics (Test Set)")
 
     metrics_fig = px.bar(
@@ -97,9 +91,8 @@ def run_performance():
 
     st.divider()
 
-    # ------------------------------------------------------
-    # 🔍 Confusion Matrix (Interactive)
-    # ------------------------------------------------------
+
+    #Confusion Matrix (Interactive)
     st.subheader("🔍 Confusion Matrix (Test Set)")
 
     cm_fig = go.Figure(data=go.Heatmap(
@@ -122,9 +115,7 @@ def run_performance():
 
     st.success("✅ Interactive performance dashboard loaded successfully!")
 
-    # ======================================================
-    # 📄 Generate PDF Report
-    # ======================================================
+    # Generate PDF Report
     st.divider()
     st.subheader("📄 Download Performance Report")
 
@@ -142,9 +133,7 @@ def run_performance():
     st.caption("🧬 DeepBreast: AI-Based Breast Cancer Detection — Interactive Evaluation & Reporting Module")
 
 
-# ==========================================================
-# 🧾 PDF Oluşturma Fonksiyonu
-# ==========================================================
+#PDF Oluşturma Fonksiyonu
 def generate_pdf_report(train_acc, val_acc, train_loss, val_loss,
                         precision, recall, f1, cm):
 

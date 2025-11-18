@@ -1,3 +1,6 @@
+"""Static Streamlit page that communicates the project goal, dataset,
+architecture, and current status to end users."""
+
 import streamlit as st
 
 def run_about():

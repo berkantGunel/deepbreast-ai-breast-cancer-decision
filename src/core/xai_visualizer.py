@@ -1,10 +1,13 @@
+"""Grad-CAM helper functions used by both the Streamlit analysis panel and the
+standalone visualization test script."""
+
 import torch
 import torch.nn.functional as F
 from torchvision import transforms
 import numpy as np
 import cv2
 from PIL import Image
-from model import BreastCancerCNN
+from src.core.model import BreastCancerCNN
 
 def generate_gradcam(model, image_path, target_layer_name="conv4", device="cuda"):
     model.eval()

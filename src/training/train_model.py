@@ -1,7 +1,15 @@
+"""Training loop that fits the BreastCancerCNN, tracks metrics per epoch, and
+persists the best-performing checkpoint along with history logs."""
+
+import sys
+from pathlib import Path
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
 import os, torch, torch.nn as nn, torch.optim as optim
 from tqdm import tqdm
-from model import BreastCancerCNN
-from data_loader import train_loader, val_loader
+from src.core.model import BreastCancerCNN
+from src.core.data_loader import train_loader, val_loader
 import json
 
 def main():
@@ -14,7 +22,7 @@ def main():
     os.makedirs("models", exist_ok=True)
     best = 0.0
 
-    # 🔹 Eğitim istatistiklerini tutacağımız log listesi
+    #Eğitim istatistiklerini tutacağımız log listesi
     history = {
         "epoch": [],
         "train_loss": [],
@@ -47,19 +55,19 @@ def main():
         print(f"Train Loss {tl/len(train_loader):.4f} | Train Acc {ta*100:.2f}%")
         print(f"Val   Loss {vl/len(val_loader):.4f} | Val   Acc {va*100:.2f}%")
 
-        # 🔹 Loglara ekle
+        #Loglara ekle
         history["epoch"].append(e+1)
         history["train_loss"].append(tl/len(train_loader))
         history["val_loss"].append(vl/len(val_loader))
         history["train_acc"].append(ta)
         history["val_acc"].append(va)
 
-        # 🔹 En iyi modeli kaydet
+        #En iyi modeli kaydet
         if va>best:
             best=va; torch.save(model.state_dict(),"models/best_model.pth")
             print("✅ Best model saved!")
 
-        # 🔹 Her epoch sonunda logları JSON olarak kaydet
+        #Her epoch sonunda logları JSON olarak kaydet
         with open("models/train_history.json", "w") as f:
             json.dump(history, f, indent=4)
 
