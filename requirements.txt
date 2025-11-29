@@ -12,3 +12,8 @@ streamlit
 pillow
 plotly
 reportlab
+
+# FastAPI dependencies
+fastapi
+uvicorn[standard]
+python-multipart
