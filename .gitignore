@@ -1,18 +1,12 @@
 # ------------------------
-# Python general
+# Python
 # ------------------------
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 *.log
-*.csv
-*.json
-*.ipynb_checkpoints/
-
-# ------------------------
-# Virtual environments
-# ------------------------
+.ipynb_checkpoints/
 venv/
 env/
 .venv/
@@ -21,39 +15,33 @@ env/
 .DS_Store
 
 # ------------------------
-# Model weights / outputs
-# ------------------------
-*.pth
-*.pt
-*.onnx
-*.h5
-*.ckpt
-
-# ------------------------
-# Data folders (too large for GitHub)
+# Data (too large for GitHub)
 # ------------------------
 data/raw/
 data/processed/
-notebooks/
-ui/__pycache__/
-models/
-!models/.gitkeep  # Keep folder but ignore large files inside
+data/test_samples/
 
 # ------------------------
-# Jupyter Notebook temporary
+# Model files (large)
 # ------------------------
-*.nbconvert.ipynb
-*.ipynb_checkpoints/
+models/*.pth
+models/*.pt
+models/*.onnx
+models/*.h5
+!models/.gitkeep
 
 # ------------------------
-# System / cache files
+# Node.js / Frontend
 # ------------------------
-Thumbs.db
-ehthumbs.db
-desktop.ini
+node_modules/
+dist/
+.cache/
+*.local
 
 # ------------------------
-# Environment files
+# Environment & System
 # ------------------------
 .env
 *.env
+Thumbs.db
+desktop.ini
