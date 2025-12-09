@@ -2,18 +2,19 @@
 elements for the DeepBreast application."""
 
 import sys
-from pathlib import Path
-# Add project root to Python path
-sys.path.insert(0, str(Path(__file__).parent.parent.parent))
-
-import streamlit as st
 import os
 import base64
+from pathlib import Path
+
+import streamlit as st
 
 from src.ui.predict import run_prediction
 from src.ui.analysis_panel import run_analysis
 from src.ui.performance import run_performance
 from src.ui.about import run_about
+
+# Add project root to Python path
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 # ======================================================
 # 🩺 Streamlit Config

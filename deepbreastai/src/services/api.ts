@@ -18,6 +18,12 @@ export interface PredictionResponse {
     benign: number;
     malignant: number;
   };
+  tta_enabled?: boolean;
+  prediction_std?: {
+    benign: number;
+    malignant: number;
+  };
+  num_augmentations?: number;
 }
 
 export interface MetricsResponse {
@@ -39,9 +45,13 @@ export interface TrainingHistoryResponse {
   }>;
 }
 
-export const predictImage = async (file: File): Promise<PredictionResponse> => {
+export const predictImage = async (
+  file: File,
+  useTta: boolean = false
+): Promise<PredictionResponse> => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("use_tta", useTta.toString());
 
   const response = await api.post<PredictionResponse>("/predict", formData, {
     headers: {
@@ -52,9 +62,13 @@ export const predictImage = async (file: File): Promise<PredictionResponse> => {
   return response.data;
 };
 
-export const generateGradCAM = async (file: File): Promise<Blob> => {
+export const generateGradCAM = async (
+  file: File,
+  method: "gradcam" | "gradcam++" | "scorecam" = "gradcam++"
+): Promise<Blob> => {
   const formData = new FormData();
   formData.append("file", file);
+  formData.append("method", method);
 
   const response = await api.post("/gradcam", formData, {
     headers: {
@@ -62,6 +76,39 @@ export const generateGradCAM = async (file: File): Promise<Blob> => {
     },
     responseType: "blob",
   });
+
+  return response.data;
+};
+
+export interface GradCAMComparisonResult {
+  image: string;
+  prediction: string;
+}
+
+export interface GradCAMComparisonResponse {
+  success: boolean;
+  methods: {
+    gradcam: GradCAMComparisonResult;
+    "gradcam++": GradCAMComparisonResult;
+    scorecam: GradCAMComparisonResult;
+  };
+}
+
+export const compareGradCAMMethods = async (
+  file: File
+): Promise<GradCAMComparisonResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post<GradCAMComparisonResponse>(
+    "/gradcam/compare",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 
   return response.data;
 };

@@ -425,17 +425,35 @@ The model converges after approximately 30-40 epochs with early stopping prevent
 
 ## 🗺 Roadmap
 
-- [x] CNN Model Training
-- [x] Grad-CAM Implementation
-- [x] FastAPI Backend
-- [x] React Frontend
+### Completed ✅
+- [x] CNN Model Training (v1.0 Baseline: 89.32%)
+- [x] Transfer Learning with ResNet18 (v2.0: 92.86% accuracy)
+- [x] Enhanced Grad-CAM (Grad-CAM++, Score-CAM)
+- [x] FastAPI Backend with XAI endpoints
+- [x] React Frontend with modern UI
 - [x] Performance Metrics Dashboard
+- [x] Test-Time Augmentation (Implemented but disabled due to recall drop)
+
+### In Progress 🚧
+- [ ] Batch Prediction API
+- [ ] Saliency Maps & Advanced XAI
+- [ ] Dark/Light Mode Toggle
+
+### Planned 📋
+- [ ] Progressive Web App (PWA)
+- [ ] Enhanced PDF Reports
+- [ ] SQLite + Real-time Statistics
+- [ ] Caching System
+- [ ] Model Versioning System
 - [ ] Docker Containerization
 - [ ] CI/CD Pipeline
-- [ ] Model Ensemble Methods
-- [ ] Multi-class Classification
 - [ ] Cloud Deployment (AWS/GCP)
-- [ ] Mobile App (React Native)
+
+### Research Ideas 💡
+- [ ] Model Ensemble Methods
+- [ ] Multi-class Classification (4+ tumor types)
+- [ ] Attention Mechanisms
+- [ ] Vision Transformers (ViT)
 
 ---
 
@@ -515,3 +533,162 @@ SOFTWARE.
 Made with ❤️ for better healthcare
 
 </div>
+
+## 🚧 Future Works
+
+### Planned Features & Improvements
+
+#### 🔥 High Priority
+
+1. **✅ Transfer Learning with Pre-trained Models** _(COMPLETED)_
+
+   - ResNet18 with ImageNet pre-trained weights
+   - **Accuracy improvement: 89.32% → 92.86%** (+3.54%)
+   - Faster convergence: 5 epochs vs 10 epochs
+   - Model: `models/best_model_resnet18.pth`
+
+2. **⚠️ Test-Time Augmentation (TTA)** _(IMPLEMENTED BUT DISABLED)_
+
+   - **Status**: Code complete, disabled by default
+   - **Issue**: Recall dropped -10.4% (86.45% → 76.05%)
+   - **Reason**: Over-smoothing + class imbalance + aggressive augmentations
+   - **Available**: Optional via `use_tta=true` parameter
+   - **Recommendation**: Use standard prediction (92.86% accuracy)
+
+3. **Attention Mechanism**
+
+   - Self-attention layers for better feature focus
+   - Improved interpretability
+   - Enhanced Grad-CAM visualization
+
+4. **Batch Prediction (Bulk Analysis)**
+   - Upload and analyze multiple images at once
+   - Batch reporting and export
+   - Time-saving for pathologists
+
+#### 📊 XAI & Visualization
+
+5. **Grad-CAM++ & Advanced XAI**
+
+   - Grad-CAM++, Score-CAM, LayerCAM implementations
+   - More accurate heatmaps
+   - Better interpretability
+
+6. **Saliency Maps**
+   - Pixel-level importance visualization
+   - Complementary to Grad-CAM
+   - Enhanced explainability
+
+#### 🎨 Frontend & UX
+
+7. **Dark/Light Mode Toggle**
+
+   - User preference theme switching
+   - Better accessibility
+   - Reduced eye strain
+
+8. **Progressive Web App (PWA)**
+
+   - Installable on mobile devices
+   - Offline support with caching
+   - Native app-like experience
+
+9. **Enhanced PDF Reports**
+   - Include Grad-CAM visualizations
+   - Patient information forms
+   - Similar case examples from dataset
+   - Digital signature support
+
+#### 📈 Performance & Backend
+
+10. **Real-time Statistics Dashboard**
+
+    - SQLite database integration
+    - Daily/weekly/monthly analytics
+    - Usage tracking and insights
+
+11. **Caching System**
+
+    - Redis/in-memory caching for predictions
+    - 10x faster repeated queries
+    - Reduced server load
+
+12. **Model Versioning**
+    - Multiple model versions (v1.0, v1.1, v2.0)
+    - A/B testing capability
+    - Rollback support
+
+#### 🐳 Deployment
+
+13. **Docker Containerization** _(Final Step)_
+    - Multi-stage Docker build
+    - docker-compose for easy deployment
+    - CI/CD pipeline integration
+    - Cloud-ready (AWS, GCP, Azure)
+
+---
+
+🎯 Önerilen İlerleme Sırası
+İşte mantıklı bir sıralama - her adım bir sonraki için temel oluşturuyor:
+
+📅 Faz 1: Model İyileştirmeleri (Temel - 3-4 gün)
+
+1. Transfer Learning 🔥 (1-2 gün)
+
+En büyük performans artışı
+Diğer özellikler için daha iyi model
+Başlamadan önce: mevcut modeli yedekle 2. Test-Time Augmentation (4-6 saat)
+
+Transfer Learning'e kolayca eklenebilir
+Performansı +%2-3 artırır
+Kod olarak basit 3. Attention Mechanism (1 gün)
+
+Transfer Learning üzerine eklenebilir
+XAI özelliklerini güçlendirir
+Grad-CAM için faydalı
+📅 Faz 2: XAI & Görselleştirme (Orta - 2-3 gün) 4. Grad-CAM++ (6-8 saat)
+
+Mevcut Grad-CAM kodunu geliştirir
+Kütüphane kullanarak kolay
+Attention Mechanism ile uyumlu çalışır 5. Saliency Maps (4-6 saat)
+
+Grad-CAM'e tamamlayıcı
+Frontend'de yan yana gösterebiliriz
+Basit implementasyon
+📅 Faz 3: Backend & Database (Orta - 2 gün) 6. SQLite + Gerçek Zamanlı İstatistikler (1 gün)
+
+Her tahmin kaydedilecek
+Caching için gerekli altyapı
+Batch prediction için veritabanı lazım 7. Caching Sistemi (6-8 saat)
+
+SQLite üzerine eklenebilir
+Aynı görüntü tekrar yüklenirse cache'ten döner
+API hızını 10x artırır
+📅 Faz 4: Frontend Geliştirmeleri (Kolay - 2 gün) 8. Batch Prediction (6-8 saat)
+
+Database hazır olmalı (Faz 3'ten)
+Frontend + Backend birlikte
+Kullanıcı deneyimini çok artırır 9. Dark/Light Mode (3-4 saat)
+
+Tailwind ile çok kolay
+Context API kullanacağız
+localStorage ile kaydet 10. PWA (Progressive Web App) (4-6 saat)
+
+manifest.json + service worker
+Offline support
+Mobil cihaza kurulabilir hale gelir
+📅 Faz 5: Raporlama (Orta - 1 gün) 11. PDF Rapor Geliştirme (1 gün)
+
+Grad-CAM++, Saliency Maps ekle
+Database'den istatistikler çek
+Profesyonel template
+📅 Faz 6: Production Hazırlığı (İleri - 1-2 gün) 12. Model Versiyonlama (4-6 saat)
+
+Transfer Learning modelini v2.0 olarak kaydet
+API'ye version parametresi ekle
+Database'e model_version kolonu 13. Docker Containerization (1 gün)
+
+EN SON ADIM
+Tüm özellikler tamamlanmış olmalı
+Multi-stage build
+docker-compose ile tek komutta çalıştır
