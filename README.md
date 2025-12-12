@@ -409,20 +409,6 @@ The model converges after approximately 30-40 epochs with early stopping prevent
 
 ---
 
-## 📸 Screenshots
-
-> _Screenshots will be added here_
-
-| Home Page                          | Prediction                               | Grad-CAM Analysis                          |
-| ---------------------------------- | ---------------------------------------- | ------------------------------------------ |
-| ![Home](docs/screenshots/home.png) | ![Predict](docs/screenshots/predict.png) | ![Analysis](docs/screenshots/analysis.png) |
-
-| Metrics Dashboard                        | About Page                           |
-| ---------------------------------------- | ------------------------------------ |
-| ![Metrics](docs/screenshots/metrics.png) | ![About](docs/screenshots/about.png) |
-
----
-
 ## 🗺 Roadmap
 
 ### Completed ✅
