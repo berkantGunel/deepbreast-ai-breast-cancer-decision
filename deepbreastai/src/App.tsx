@@ -5,19 +5,23 @@ import Predict from "./pages/Predict";
 import Analysis from "./pages/Analysis";
 import Metrics from "./pages/Metrics";
 import About from "./pages/About";
+import History from "./pages/History";
 
 function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      <div className="min-h-screen w-full">
         <Navbar />
-        <div aria-hidden className="h-16 sm:h-20 lg:h-20" />
-        <main>
+        {/* Spacer for fixed navbar */}
+        <div className="h-20" />
+        {/* Main content area */}
+        <main className="w-full">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/predict" element={<Predict />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/metrics" element={<Metrics />} />
+            <Route path="/history" element={<History />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </main>
@@ -27,3 +31,4 @@ function App() {
 }
 
 export default App;
+

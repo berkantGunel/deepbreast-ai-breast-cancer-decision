@@ -51,15 +51,13 @@ const Metrics = () => {
 
   if (loading) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto text-slate-50 flex items-center justify-center min-h-[60vh]">
-        <div className="text-center animate-fade-in">
-          <div className="p-4 bg-emerald-500/20 border border-emerald-400/30 rounded-2xl w-fit mx-auto mb-6">
-            <Loader2 className="w-12 h-12 animate-spin text-emerald-400" />
+      <div className="page-container flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl w-fit mx-auto mb-5">
+            <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
           </div>
-          <p className="text-title text-white">Loading metrics...</p>
-          <p className="text-body text-slate-300 mt-2">
-            Fetching model performance data
-          </p>
+          <h3 className="text-lg font-semibold text-white mb-2">Loading Metrics</h3>
+          <p className="text-slate-400">Fetching model performance data...</p>
         </div>
       </div>
     );
@@ -67,150 +65,140 @@ const Metrics = () => {
 
   if (error) {
     return (
-      <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto text-slate-50">
-        <div className="bg-red-500/10 border border-red-400/30 rounded-2xl p-8 flex items-start space-x-4">
-          <div className="p-3 bg-red-500/20 border border-red-400/30 rounded-xl">
-            <AlertCircle className="w-6 h-6 text-red-400" />
-          </div>
-          <div>
-            <p className="text-title text-red-300">Error Loading Metrics</p>
-            <p className="text-body text-red-200 mt-1">{error}</p>
+      <div className="page-container">
+        <div className="glass-card bg-red-500/10 border-red-500/30 p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-3 bg-red-500/20 rounded-xl">
+              <AlertCircle className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <p className="font-semibold text-red-300 mb-1">Error Loading Metrics</p>
+              <p className="text-red-200/80">{error}</p>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
-  const confusionMatrix = metrics?.confusion_matrix || [
-    [0, 0],
-    [0, 0],
+  const confusionMatrix = metrics?.confusion_matrix || [[0, 0], [0, 0]];
+  const trainingData = history?.history?.map((item, idx) => ({
+    epoch: idx + 1,
+    train_loss: item.train_loss,
+    val_loss: item.val_loss,
+    train_acc: item.train_acc * 100,
+    val_acc: item.val_acc * 100,
+  })) || [];
+
+  const metricCards = [
+    {
+      label: "Accuracy",
+      value: `${(metrics?.accuracy ?? 0).toFixed(1)}%`,
+      icon: Target,
+      color: "text-emerald-400",
+      bg: "from-emerald-500/20 to-emerald-500/10",
+    },
+    {
+      label: "Precision",
+      value: `${(metrics?.precision ?? 0).toFixed(1)}%`,
+      icon: TrendingUp,
+      color: "text-cyan-400",
+      bg: "from-cyan-500/20 to-cyan-500/10",
+    },
+    {
+      label: "Recall",
+      value: `${(metrics?.recall ?? 0).toFixed(1)}%`,
+      icon: Award,
+      color: "text-purple-400",
+      bg: "from-purple-500/20 to-purple-500/10",
+    },
+    {
+      label: "F1-Score",
+      value: `${(metrics?.f1_score ?? 0).toFixed(1)}%`,
+      icon: BarChart3,
+      color: "text-amber-400",
+      bg: "from-amber-500/20 to-amber-500/10",
+    },
   ];
-  const trainingData =
-    history?.history?.map((item, idx) => ({
-      epoch: idx + 1,
-      train_loss: item.train_loss,
-      val_loss: item.val_loss,
-      train_acc: item.train_acc * 100,
-      val_acc: item.val_acc * 100,
-    })) || [];
 
   return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto text-slate-50">
-      {/* Header */}
-      <section className="section animate-fade-in">
-        <div className="mb-2">
-          <h1 className="text-display text-white flex items-center gap-4">
-            <div className="p-3 bg-emerald-500/20 border border-emerald-400/30 rounded-2xl">
-              <BarChart3 className="w-10 h-10 text-emerald-400" />
-            </div>
-            Performance Metrics
-          </h1>
+    <div className="page-container">
+      {/* Page Header */}
+      <section className="section">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-green-500/20 border border-emerald-500/30 rounded-2xl">
+            <BarChart3 className="w-8 h-8 text-emerald-400" />
+          </div>
+          <div>
+            <h1 className="text-3xl lg:text-4xl font-bold text-white">
+              Performance Metrics
+            </h1>
+            <p className="text-slate-400 mt-1">
+              Model evaluation results and training history
+            </p>
+          </div>
         </div>
-        <p className="text-body text-slate-300 mt-4 max-w-2xl">
-          Model evaluation results and training history visualization.
-        </p>
       </section>
 
       {/* Key Metrics */}
       <section className="section">
-        <h3 className="text-headline text-white mb-8">Key Metrics</h3>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-          <div
-            className="metric-card animate-fade-in-up"
-            style={{ animationDelay: "0.1s" }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-emerald-500/20 border border-emerald-400/30 rounded-xl">
-                <Target className="w-5 h-5 text-emerald-400" />
+        <h2 className="text-xl font-semibold text-white mb-6">Key Metrics</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+          {metricCards.map((metric, index) => (
+            <div
+              key={metric.label}
+              className="metric-card animate-fade-in-up"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`p-2 bg-gradient-to-br ${metric.bg} border border-white/10 rounded-xl`}>
+                  <metric.icon className={`w-5 h-5 ${metric.color}`} />
+                </div>
+                <span className="text-sm text-slate-400">{metric.label}</span>
               </div>
-              <span className="text-body text-slate-300">Accuracy</span>
-            </div>
-            <div className="metric-value text-emerald-400">
-              {(metrics?.accuracy ?? 0).toFixed(1)}%
-            </div>
-          </div>
-
-          <div
-            className="metric-card animate-fade-in-up"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-cyan-500/20 border border-cyan-400/30 rounded-xl">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+              <div className={`text-3xl lg:text-4xl font-bold ${metric.color}`}>
+                {metric.value}
               </div>
-              <span className="text-body text-slate-300">Precision</span>
             </div>
-            <div className="metric-value text-blue-600">
-              {(metrics?.precision ?? 0).toFixed(1)}%
-            </div>
-          </div>
-
-          <div
-            className="metric-card animate-fade-in-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-purple-500/20 border border-purple-400/30 rounded-xl">
-                <Award className="w-5 h-5 text-purple-600" />
-              </div>
-              <span className="text-body text-slate-300">Recall</span>
-            </div>
-            <div className="metric-value text-purple-600">
-              {(metrics?.recall ?? 0).toFixed(1)}%
-            </div>
-          </div>
-
-          <div
-            className="metric-card animate-fade-in-up"
-            style={{ animationDelay: "0.25s" }}
-          >
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-orange-500/20 border border-orange-400/30 rounded-xl">
-                <BarChart3 className="w-5 h-5 text-orange-600" />
-              </div>
-              <span className="text-body text-slate-300">F1-Score</span>
-            </div>
-            <div className="metric-value text-orange-600">
-              {(metrics?.f1_score ?? 0).toFixed(1)}%
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Training History Charts */}
       <section className="section">
-        <h3 className="text-headline text-white mb-8">Training History</h3>
-        <div className="grid lg:grid-cols-2 gap-8">
+        <h2 className="text-xl font-semibold text-white mb-6">Training History</h2>
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Loss Chart */}
-          <div
-            className="card-elevated animate-fade-in-up"
-            style={{ animationDelay: "0.3s" }}
-          >
-            <h4 className="text-title text-white mb-6">Loss over Epochs</h4>
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="glass-card p-6 animate-fade-in-up" style={{ animationDelay: "0.3s" }}>
+            <h3 className="text-lg font-semibold text-white mb-6">Loss over Epochs</h3>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={trainingData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis
                   dataKey="epoch"
-                  stroke="#6b7280"
+                  stroke="#64748b"
                   fontSize={12}
                   tickMargin={10}
                 />
-                <YAxis stroke="#6b7280" fontSize={12} tickMargin={10} />
+                <YAxis
+                  stroke="#64748b"
+                  fontSize={12}
+                  tickMargin={10}
+                />
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "16px",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    padding: "12px 16px",
+                    background: "#1e293b",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    color: "#f8fafc",
                   }}
                 />
-                <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                <Legend wrapperStyle={{ paddingTop: "16px" }} />
                 <Line
                   type="monotone"
                   dataKey="train_loss"
                   stroke="#ef4444"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   name="Training"
                   dot={false}
                 />
@@ -218,7 +206,7 @@ const Metrics = () => {
                   type="monotone"
                   dataKey="val_loss"
                   stroke="#f97316"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   name="Validation"
                   dot={false}
                 />
@@ -227,50 +215,45 @@ const Metrics = () => {
           </div>
 
           {/* Accuracy Chart */}
-          <div
-            className="card-elevated animate-fade-in-up"
-            style={{ animationDelay: "0.35s" }}
-          >
-            <h4 className="text-title text-white mb-6">
-              Accuracy over Epochs
-            </h4>
-            <ResponsiveContainer width="100%" height={300}>
+          <div className="glass-card p-6 animate-fade-in-up" style={{ animationDelay: "0.4s" }}>
+            <h3 className="text-lg font-semibold text-white mb-6">Accuracy over Epochs</h3>
+            <ResponsiveContainer width="100%" height={280}>
               <LineChart data={trainingData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
                 <XAxis
                   dataKey="epoch"
-                  stroke="#6b7280"
+                  stroke="#64748b"
                   fontSize={12}
                   tickMargin={10}
                 />
                 <YAxis
-                  stroke="#6b7280"
+                  stroke="#64748b"
                   fontSize={12}
                   domain={[0, 100]}
                   tickMargin={10}
                 />
                 <Tooltip
                   contentStyle={{
-                    borderRadius: "16px",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                    padding: "12px 16px",
+                    background: "#1e293b",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    borderRadius: "12px",
+                    color: "#f8fafc",
                   }}
                 />
-                <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                <Legend wrapperStyle={{ paddingTop: "16px" }} />
                 <Line
                   type="monotone"
                   dataKey="train_acc"
                   stroke="#10b981"
-                  strokeWidth={3}
+                  strokeWidth={2}
                   name="Training"
                   dot={false}
                 />
                 <Line
                   type="monotone"
                   dataKey="val_acc"
-                  stroke="#059669"
-                  strokeWidth={3}
+                  stroke="#06b6d4"
+                  strokeWidth={2}
                   name="Validation"
                   dot={false}
                 />
@@ -282,87 +265,73 @@ const Metrics = () => {
 
       {/* Confusion Matrix */}
       <section className="section">
-        <h3 className="text-headline text-white mb-8">Confusion Matrix</h3>
-        <div
-          className="card-elevated max-w-2xl animate-fade-in-up"
-          style={{ animationDelay: "0.4s" }}
-        >
+        <h2 className="text-xl font-semibold text-white mb-6">Confusion Matrix</h2>
+        <div className="glass-card p-6 lg:p-8 max-w-3xl animate-fade-in-up" style={{ animationDelay: "0.5s" }}>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr>
-                  <th className="p-4"></th>
-                  <th
-                    className="p-4 text-center text-title text-white"
-                    colSpan={2}
-                  >
+                  <th className="p-3"></th>
+                  <th className="p-3 text-center text-sm font-semibold text-slate-300" colSpan={2}>
                     Predicted
                   </th>
                 </tr>
                 <tr>
-                  <th className="p-4"></th>
-                  <th className="p-4 text-center">
+                  <th className="p-3"></th>
+                  <th className="p-3 text-center">
                     <span className="badge badge-success">Benign</span>
                   </th>
-                  <th className="p-4 text-center">
+                  <th className="p-3 text-center">
                     <span className="badge badge-danger">Malignant</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr>
-                  <td className="p-4 text-title text-white font-medium">
+                  <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-400">Actual</span>
+                      <span className="text-xs text-slate-500">Actual</span>
                       <span className="badge badge-success">Benign</span>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="bg-green-500/20 border border-green-400/30 rounded-2xl p-6 text-center">
-                      <span className="text-3xl font-bold text-green-400">
+                  <td className="p-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center">
+                      <span className="text-2xl lg:text-3xl font-bold text-emerald-400">
                         {confusionMatrix[0][0]}
                       </span>
-                      <p className="text-sm text-green-300 mt-1">
-                        True Negative
-                      </p>
+                      <p className="text-xs text-emerald-300/70 mt-1">True Negative</p>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="bg-red-500/10 border border-red-400/30 rounded-2xl p-6 text-center">
-                      <span className="text-3xl font-bold text-red-300">
+                  <td className="p-3">
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+                      <span className="text-2xl lg:text-3xl font-bold text-red-400/70">
                         {confusionMatrix[0][1]}
                       </span>
-                      <p className="text-sm text-red-200 mt-1">
-                        False Positive
-                      </p>
+                      <p className="text-xs text-red-300/70 mt-1">False Positive</p>
                     </div>
                   </td>
                 </tr>
                 <tr>
-                  <td className="p-4 text-title text-white font-medium">
+                  <td className="p-3">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-400">Actual</span>
+                      <span className="text-xs text-slate-500">Actual</span>
                       <span className="badge badge-danger">Malignant</span>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="bg-orange-500/10 border border-orange-400/30 rounded-2xl p-6 text-center">
-                      <span className="text-3xl font-bold text-orange-300">
+                  <td className="p-3">
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 text-center">
+                      <span className="text-2xl lg:text-3xl font-bold text-amber-400/70">
                         {confusionMatrix[1][0]}
                       </span>
-                      <p className="text-sm text-orange-400 mt-1">
-                        False Negative
-                      </p>
+                      <p className="text-xs text-amber-300/70 mt-1">False Negative</p>
                     </div>
                   </td>
-                  <td className="p-4">
-                    <div className="bg-green-500/20 border border-green-400/30 rounded-2xl p-6 text-center">
-                      <span className="text-3xl font-bold text-green-400">
+                  <td className="p-3">
+                    <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 text-center">
+                      <span className="text-2xl lg:text-3xl font-bold text-emerald-400">
                         {confusionMatrix[1][1]}
                       </span>
-                      <p className="text-sm text-green-300 mt-1">
-                        True Positive
-                      </p>
+                      <p className="text-xs text-emerald-300/70 mt-1">True Positive</p>
                     </div>
                   </td>
                 </tr>

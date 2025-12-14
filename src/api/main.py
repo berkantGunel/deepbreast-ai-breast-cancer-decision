@@ -2,13 +2,13 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.endpoints import predict, gradcam, metrics
+from src.api.endpoints import predict, gradcam, metrics, report, dicom, history
 
 # Initialize FastAPI app
 app = FastAPI(
     title="DeepBreast API",
-    description="AI-Based Breast Cancer Detection API",
-    version="2.0.0",
+    description="AI-Based Breast Cancer Detection API with Uncertainty Estimation, PDF Reports, DICOM Support, and Analysis History",
+    version="2.3.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -26,13 +26,25 @@ app.add_middleware(
 app.include_router(predict.router, prefix="/api", tags=["Prediction"])
 app.include_router(gradcam.router, prefix="/api", tags=["Grad-CAM"])
 app.include_router(metrics.router, prefix="/api", tags=["Metrics"])
+app.include_router(report.router, prefix="/api", tags=["Reports"])
+app.include_router(dicom.router, prefix="/api", tags=["DICOM"])
+app.include_router(history.router, prefix="/api", tags=["History & Batch"])
 
 @app.get("/")
 async def root():
     """Root endpoint - API health check."""
     return {
         "message": "DeepBreast API is running",
-        "version": "1.0.0",
+        "version": "2.3.0",
+        "features": [
+            "Cancer Detection (Histopathology)",
+            "MC Dropout Uncertainty",
+            "Grad-CAM Visualization",
+            "PDF Reports",
+            "DICOM Support",
+            "Analysis History",
+            "Batch Upload"
+        ],
         "docs": "/docs"
     }
 
@@ -40,3 +52,5 @@ async def root():
 async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+

@@ -13,6 +13,9 @@ pillow
 plotly
 reportlab
 
+# DICOM support
+pydicom
+
 # FastAPI dependencies
 fastapi
 uvicorn[standard]

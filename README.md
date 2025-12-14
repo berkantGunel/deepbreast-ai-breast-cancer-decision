@@ -4,7 +4,7 @@
 
 **AI-powered breast cancer detection system using deep learning for histopathology image analysis.**
 
-[![Version](https://img.shields.io/badge/version-2.0.0-blue?style=for-the-badge)](https://github.com/berkantGunel/deepbreast-ai-breast-cancer-decision)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue?style=for-the-badge)](https://github.com/berkantGunel/deepbreast-ai-breast-cancer-decision)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -59,20 +59,22 @@
 | Feature                             | Description                                              |
 | ----------------------------------- | -------------------------------------------------------- |
 | 🧠 **Deep Learning Classification** | CNN-based model trained on histopathology images         |
-| 🔥 **Grad-CAM Visualization**       | Explainable AI with heatmap overlays showing focus areas |
+| 🔥 **Enhanced Grad-CAM**            | Multiple XAI methods: Grad-CAM, Grad-CAM++, Score-CAM    |
 | ⚡ **Real-time Prediction**         | Instant analysis with confidence scores                  |
 | 📈 **Performance Metrics**          | Detailed accuracy, precision, recall, and F1 metrics     |
 | 📊 **Training History**             | Visualize model training progress over epochs            |
+| 📜 **Analysis History**             | Track and review past predictions with local storage     |
 
 ### Technical Features
 
 | Feature                | Description                                          |
 | ---------------------- | ---------------------------------------------------- |
 | 🌐 **REST API**        | FastAPI backend with automatic OpenAPI documentation |
-| 💻 **Modern Frontend** | React 18 + TypeScript with responsive design         |
-| 🎨 **Tailwind CSS**    | Beautiful, Streamlit-inspired UI components          |
+| 💻 **Modern Frontend** | React 18 + TypeScript with modern UI design          |
+| 🎨 **Tailwind CSS**    | Beautiful glassmorphism UI components                |
 | 🔄 **Hot Reload**      | Development servers with live reload                 |
 | 📱 **Mobile Friendly** | Responsive design works on all devices               |
+| 🧭 **Lucide Icons**    | Modern, consistent iconography throughout the app    |
 
 ---
 
@@ -112,9 +114,10 @@ BreastCancerPrediction_BCP/
 │   │   │   ├── Sidebar.tsx       # Navigation sidebar
 │   │   │   └── Navbar.tsx        # Top navigation bar
 │   │   ├── 📂 pages/             # Application pages
-│   │   │   ├── Home.tsx          # Landing page
+│   │   │   ├── Home.tsx          # Landing page (redesigned)
 │   │   │   ├── Predict.tsx       # Image upload & prediction
-│   │   │   ├── Analysis.tsx      # Grad-CAM visualization
+│   │   │   ├── Analysis.tsx      # Enhanced Grad-CAM visualization
+│   │   │   ├── History.tsx       # Analysis history tracking
 │   │   │   ├── Metrics.tsx       # Performance dashboard
 │   │   │   └── About.tsx         # Project information
 │   │   ├── 📂 services/          # API integration
@@ -414,11 +417,14 @@ The model converges after approximately 30-40 epochs with early stopping prevent
 ### Completed ✅
 - [x] CNN Model Training (v1.0 Baseline: 89.32%)
 - [x] Transfer Learning with ResNet18 (v2.0: 92.86% accuracy)
-- [x] Enhanced Grad-CAM (Grad-CAM++, Score-CAM)
+- [x] Enhanced Grad-CAM (Grad-CAM++, Score-CAM) - v2.1
 - [x] FastAPI Backend with XAI endpoints
 - [x] React Frontend with modern UI
 - [x] Performance Metrics Dashboard
 - [x] Test-Time Augmentation (Implemented but disabled due to recall drop)
+- [x] **UI Redesign** - All pages redesigned with glassmorphism (v2.1)
+- [x] **Analysis History Page** - Track past predictions (v2.1)
+- [x] **Modern Icon System** - Lucide React icons (v2.1)
 
 ### In Progress 🚧
 - [ ] Batch Prediction API
@@ -678,3 +684,24 @@ EN SON ADIM
 Tüm özellikler tamamlanmış olmalı
 Multi-stage build
 docker-compose ile tek komutta çalıştır
+
+
+
+
+
+
+1. 🔥 Model Uncertainty (MC Dropout)
+Klinik kullanım için kritik - "Bu tahminden ne kadar eminiz?" sorusuna cevap verir.
+
+2. 📄 PDF Rapor Çıktısı
+Doktorların kullanabileceği profesyonel raporlar üretir.
+
+3. 📁 DICOM Format Desteği
+Tıbbi görüntüleme standardı - hastane sistemleriyle uyumluluk sağlar.
+
+4. 🗄️ Batch Upload & Geçmiş Kayıtları
+Pratik kullanım için önemli - SQLite ile basit veritabanı.
+
+
+https://www.kaggle.com/datasets/awsaf49/cbis-ddsm-breast-cancer-image-dataset
+mamagrofi dataset

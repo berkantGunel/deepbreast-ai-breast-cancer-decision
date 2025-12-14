@@ -8,6 +8,7 @@ import {
   Info,
   Sparkles,
   Grid3x3,
+  XCircle,
 } from "lucide-react";
 import {
   generateGradCAM,
@@ -22,12 +23,9 @@ const Analysis = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [opacity, setOpacity] = useState(0.7);
-  const [method, setMethod] = useState<"gradcam" | "gradcam++" | "scorecam">(
-    "gradcam++"
-  );
+  const [method, setMethod] = useState<"gradcam" | "gradcam++" | "scorecam">("gradcam++");
   const [compareMode, setCompareMode] = useState(false);
-  const [comparison, setComparison] =
-    useState<GradCAMComparisonResponse | null>(null);
+  const [comparison, setComparison] = useState<GradCAMComparisonResponse | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -47,12 +45,10 @@ const Analysis = () => {
     setComparison(null);
     try {
       if (compareMode) {
-        // Compare all methods
         const result = await compareGradCAMMethods(selectedFile);
         setComparison(result);
         setHeatmap(null);
       } else {
-        // Single method
         const blob = await generateGradCAM(selectedFile, method);
         const url = URL.createObjectURL(blob);
         setHeatmap(url);
@@ -73,64 +69,72 @@ const Analysis = () => {
     a.click();
   };
 
-  return (
-    <div className="w-full px-4 sm:px-6 lg:px-8 py-8 max-w-7xl mx-auto text-slate-50">
-      {/* Header */}
-      <section className="section animate-fade-in">
-        <div className="mb-2">
-          <h1 className="text-display text-white flex items-center gap-4">
-            <div className="p-3 bg-cyan-500/20 border border-cyan-400/30 rounded-2xl">
-              <Eye className="w-10 h-10 text-cyan-400" />
-            </div>
-            Grad-CAM Analysis
-          </h1>
-        </div>
-        <p className="text-body text-slate-300 mt-4 max-w-2xl">
-          Visualize AI attention with explainable heatmaps to understand model
-          decisions.
-        </p>
-      </section>
+  const clearSelection = () => {
+    setSelectedFile(null);
+    setPreview(null);
+    setHeatmap(null);
+    setComparison(null);
+    setError(null);
+  };
 
-      {/* Info Box */}
-      <section
-        className="section animate-fade-in-up"
-        style={{ animationDelay: "0.1s" }}
-      >
-        <div className="bg-cyan-500/10 border border-cyan-400/30 rounded-2xl p-6 flex items-start space-x-4">
-          <div className="p-2 bg-cyan-500/20 border border-cyan-400/30 rounded-xl">
-            <Info className="w-6 h-6 text-cyan-400" />
+  return (
+    <div className="page-container">
+      {/* Page Header */}
+      <section className="section">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-2xl">
+            <Eye className="w-8 h-8 text-cyan-400" />
           </div>
           <div>
-            <p className="text-title text-white mb-1">What is Grad-CAM?</p>
-            <p className="text-body text-slate-200">
-              Gradient-weighted Class Activation Mapping highlights which
-              regions of the image most influenced the model's prediction,
-              providing transparency and interpretability.
+            <h1 className="text-3xl lg:text-4xl font-bold text-white">
+              Grad-CAM Analysis
+            </h1>
+            <p className="text-slate-400 mt-1">
+              Visualize AI attention with explainable heatmaps
             </p>
           </div>
         </div>
       </section>
 
+      {/* Info Box */}
       <section className="section">
-        <div className="grid lg:grid-cols-2 gap-10 lg:gap-16">
-          {/* Upload Section */}
-          <div
-            className="animate-fade-in-up"
-            style={{ animationDelay: "0.15s" }}
-          >
-            <h3 className="text-headline text-white mb-6">Upload Image</h3>
+        <div className="glass-card bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-5">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-cyan-500/20 border border-cyan-500/30 rounded-lg">
+              <Info className="w-5 h-5 text-cyan-400" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-1">What is Grad-CAM?</h4>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Gradient-weighted Class Activation Mapping highlights which regions of the image
+                most influenced the model's prediction, providing transparency and interpretability.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-            <label className="upload-area block cursor-pointer group">
-              <div className="flex flex-col items-center justify-center py-12">
-                <div className="p-4 bg-cyan-500/10 border border-cyan-400/30 rounded-2xl mb-6 group-hover:bg-cyan-500/20 transition-colors">
-                  <Upload className="w-10 h-10 text-cyan-400" />
+      {/* Main Content Grid */}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Left Column - Upload & Settings */}
+        <div className="space-y-6">
+          {/* Upload Area */}
+          <div className="glass-card p-6">
+            <h2 className="text-xl font-semibold text-white mb-4">Upload Image</h2>
+
+            <label className="block cursor-pointer">
+              <div className="upload-zone p-10">
+                <div className="flex flex-col items-center text-center">
+                  <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl mb-4">
+                    <Upload className="w-10 h-10 text-cyan-400" />
+                  </div>
+                  <p className="text-lg font-medium text-white mb-2">
+                    Click to upload or drag and drop
+                  </p>
+                  <p className="text-sm text-slate-400">
+                    PNG, JPG or TIFF up to 10MB
+                  </p>
                 </div>
-                <p className="text-title text-white mb-2">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-body text-slate-300">
-                  PNG, JPG or TIFF up to 10MB
-                </p>
               </div>
               <input
                 type="file"
@@ -139,260 +143,221 @@ const Analysis = () => {
                 onChange={handleFileSelect}
               />
             </label>
+          </div>
 
-            {preview && (
-              <div className="mt-8 animate-scale-in">
-                <p className="text-title text-white mb-4">Original Image</p>
-                <div className="card p-4">
-                  <img
-                    src={preview}
-                    alt="Preview"
-                    className="w-full rounded-xl shadow-sm"
-                  />
-                </div>
+          {/* Image Preview */}
+          {preview && (
+            <div className="glass-card p-6 animate-fade-in-up">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-white">Original Image</h3>
+                <button
+                  onClick={clearSelection}
+                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <XCircle className="w-5 h-5 text-slate-400 hover:text-red-400" />
+                </button>
               </div>
-            )}
-
-            {/* Method Selection */}
-            <div className="mt-8 space-y-4">
-              <div className="card-lg">
-                <label className="text-title text-white mb-4 block">
-                  Visualization Method
-                </label>
-                <div className="grid grid-cols-3 gap-3">
-                  {(["gradcam", "gradcam++", "scorecam"] as const).map((m) => (
-                    <button
-                      key={m}
-                      onClick={() => {
-                        setMethod(m);
-                        setCompareMode(false);
-                      }}
-                      className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                        method === m && !compareMode
-                          ? "bg-cyan-500 text-white shadow-md"
-                          : "bg-white/10 text-slate-300 hover:bg-white/20"
-                      }`}
-                    >
-                      {m === "gradcam++" ? "Grad-CAM++" : m.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Compare Mode Toggle */}
-              <div className="card-lg">
-                <label className="flex items-center justify-between cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <Grid3x3 className="w-5 h-5 text-cyan-400" />
-                    <div>
-                      <p className="text-title text-white">Compare All</p>
-                      <p className="text-sm text-slate-300">
-                        Show all three methods side-by-side
-                      </p>
-                    </div>
-                  </div>
-                  <input
-                    type="checkbox"
-                    checked={compareMode}
-                    onChange={(e) => setCompareMode(e.target.checked)}
-                    className="w-6 h-6 text-cyan-500 rounded focus:ring-cyan-500"
-                  />
-                </label>
+              <div className="rounded-xl overflow-hidden border border-white/10">
+                <img src={preview} alt="Preview" className="w-full h-auto" />
               </div>
             </div>
+          )}
 
-            <button
-              onClick={handleGenerateHeatmap}
-              disabled={!selectedFile || loading}
-              className="btn-secondary w-full mt-8 py-4 !bg-cyan-500 hover:!bg-cyan-600"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  <span>Generating...</span>
-                </>
-              ) : (
-                <>
-                  {compareMode ? (
-                    <Grid3x3 className="w-6 h-6" />
-                  ) : (
-                    <Sparkles className="w-6 h-6" />
-                  )}
-                  <span>
-                    {compareMode ? "Compare All Methods" : "Generate Heatmap"}
-                  </span>
-                </>
-              )}
-            </button>
+          {/* Method Selection */}
+          <div className="glass-card p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">
+              Visualization Method
+            </h3>
+            <div className="grid grid-cols-3 gap-2">
+              {(["gradcam", "gradcam++", "scorecam"] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => {
+                    setMethod(m);
+                    setCompareMode(false);
+                  }}
+                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${method === m && !compareMode
+                      ? "bg-cyan-500 text-white"
+                      : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
+                    }`}
+                >
+                  {m === "gradcam++" ? "Grad-CAM++" : m.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
 
-            {error && (
-              <div className="mt-6 bg-red-500/10 border border-red-400/30 rounded-2xl p-6 flex items-start space-x-4 animate-fade-in">
-                <div className="p-2 bg-red-500/20 border border-red-400/30 rounded-xl">
-                  <AlertCircle className="w-6 h-6 text-red-500" />
+          {/* Compare Mode Toggle */}
+          <div className="glass-card p-6">
+            <label className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
+                  <Grid3x3 className="w-5 h-5 text-purple-400" />
                 </div>
                 <div>
-                  <p className="text-title text-red-800">Error</p>
-                  <p className="text-body text-red-600 mt-1">{error}</p>
+                  <p className="font-semibold text-white">Compare All Methods</p>
+                  <p className="text-sm text-slate-400">Show all three methods side-by-side</p>
                 </div>
               </div>
+              <input
+                type="checkbox"
+                checked={compareMode}
+                onChange={(e) => setCompareMode(e.target.checked)}
+                className="w-5 h-5"
+              />
+            </label>
+          </div>
+
+          {/* Generate Button */}
+          <button
+            onClick={handleGenerateHeatmap}
+            disabled={!selectedFile || loading}
+            className="w-full btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                <span>Generating...</span>
+              </>
+            ) : (
+              <>
+                {compareMode ? <Grid3x3 className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
+                <span>{compareMode ? "Compare All Methods" : "Generate Heatmap"}</span>
+              </>
+            )}
+          </button>
+
+          {/* Error */}
+          {error && (
+            <div className="glass-card bg-red-500/10 border-red-500/30 p-5 animate-fade-in">
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-red-500/20 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-red-300 mb-1">Error</p>
+                  <p className="text-sm text-red-200/80">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column - Results */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-white">
+              {compareMode ? "Method Comparison" : "Heatmap Result"}
+            </h2>
+            {heatmap && (
+              <button onClick={handleDownload} className="btn-secondary py-2 px-4">
+                <Download className="w-4 h-4" />
+                <span>Download</span>
+              </button>
             )}
           </div>
 
-          {/* Results Section */}
-          <div
-            className="animate-fade-in-up"
-            style={{ animationDelay: "0.2s" }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-headline text-white">
-                {compareMode ? "Method Comparison" : "Heatmap Result"}
-              </h3>
-              {heatmap && (
-                <button
-                  onClick={handleDownload}
-                  className="btn-secondary !py-2 !px-4"
-                >
-                  <Download className="w-5 h-5" />
-                  <span>Download</span>
-                </button>
-              )}
+          {/* Empty State */}
+          {!heatmap && !comparison && !loading && (
+            <div className="glass-card p-12 text-center">
+              <div className="p-5 bg-white/5 border border-white/10 rounded-2xl w-fit mx-auto mb-5">
+                <Eye className="w-12 h-12 text-slate-500" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-300 mb-2">No Heatmap Yet</h3>
+              <p className="text-slate-500">Upload an image to generate visualization</p>
             </div>
+          )}
 
-            {!heatmap && !comparison && !loading && (
-              <div className="card-elevated p-12 text-center">
-                <div className="p-4 bg-white/5 border border-white/10 rounded-2xl w-fit mx-auto mb-6">
-                  <Eye className="w-12 h-12 text-slate-400" />
-                </div>
-                <p className="text-title text-slate-300 mb-2">No Heatmap Yet</p>
-                <p className="text-body text-slate-400">
-                  Upload an image to generate visualization
-                </p>
+          {/* Loading State */}
+          {loading && (
+            <div className="glass-card bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-12 text-center">
+              <div className="p-5 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl w-fit mx-auto mb-5">
+                <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
               </div>
-            )}
+              <h3 className="text-lg font-semibold text-white mb-2">Generating Heatmap</h3>
+              <p className="text-slate-400">Computing attention regions...</p>
+            </div>
+          )}
 
-            {loading && (
-              <div className="card-elevated p-12 text-center">
-                <div className="p-4 bg-cyan-500/10 border border-cyan-400/30 rounded-2xl w-fit mx-auto mb-6">
-                  <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-                </div>
-                <p className="text-title text-white mb-2">
-                  Generating Heatmap
-                </p>
-                <p className="text-body text-slate-300">
-                  Computing attention regions
-                </p>
-              </div>
-            )}
-
-            {/* Comparison View */}
-            {comparison && (
-              <div className="space-y-6 animate-scale-in">
-                <div className="grid grid-cols-1 gap-6">
-                  {Object.entries(comparison.methods).map(
-                    ([methodName, data]) => (
-                      <div key={methodName} className="card p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <p className="text-title text-white">
-                            {methodName === "gradcam++"
-                              ? "Grad-CAM++"
-                              : methodName.toUpperCase()}
-                          </p>
-                          <span
-                            className={`badge ${
-                              data.prediction === "Malignant"
-                                ? "badge-error"
-                                : "badge-success"
-                            }`}
-                          >
-                            {data.prediction}
-                          </span>
-                        </div>
-                        <img
-                          src={data.image}
-                          alt={`${methodName} heatmap`}
-                          className="w-full rounded-xl shadow-sm"
-                        />
-                      </div>
-                    )
-                  )}
-                </div>
-
-                {/* Method Info */}
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-6 lg:p-8">
-                  <p className="text-title text-white mb-3">
-                    Method Comparison
-                  </p>
-                  <div className="space-y-2 text-sm text-slate-200">
-                    <p>
-                      <strong>Grad-CAM:</strong> Original, fast, good quality
-                    </p>
-                    <p>
-                      <strong>Grad-CAM++:</strong> Improved with pixel-wise
-                      weighting, best quality
-                    </p>
-                    <p>
-                      <strong>Score-CAM:</strong> Gradient-free, slowest but
-                      robust
-                    </p>
+          {/* Comparison View */}
+          {comparison && (
+            <div className="space-y-6 animate-fade-in-up">
+              {Object.entries(comparison.methods).map(([methodName, data]) => (
+                <div key={methodName} className="glass-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h4 className="font-semibold text-white">
+                      {methodName === "gradcam++" ? "Grad-CAM++" : methodName.toUpperCase()}
+                    </h4>
+                    <span className={`badge ${data.prediction === "Malignant" ? "badge-danger" : "badge-success"}`}>
+                      {data.prediction}
+                    </span>
+                  </div>
+                  <div className="rounded-xl overflow-hidden border border-white/10">
+                    <img src={data.image} alt={`${methodName} heatmap`} className="w-full h-auto" />
                   </div>
                 </div>
-              </div>
-            )}
+              ))}
 
-            {heatmap && (
-              <div className="space-y-6 animate-scale-in">
-                <div className="card p-4">
+              {/* Method Info */}
+              <div className="glass-card p-6">
+                <h4 className="font-semibold text-white mb-4">Method Comparison</h4>
+                <div className="space-y-3 text-sm text-slate-300">
+                  <p><strong className="text-white">Grad-CAM:</strong> Original, fast, good quality</p>
+                  <p><strong className="text-white">Grad-CAM++:</strong> Improved with pixel-wise weighting, best quality</p>
+                  <p><strong className="text-white">Score-CAM:</strong> Gradient-free, slowest but robust</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Single Heatmap View */}
+          {heatmap && (
+            <div className="space-y-6 animate-fade-in-up">
+              <div className="glass-card p-5">
+                <div className="rounded-xl overflow-hidden border border-white/10">
                   <img
                     src={heatmap}
                     alt="Grad-CAM Heatmap"
-                    className="w-full rounded-xl shadow-sm"
+                    className="w-full h-auto"
                     style={{ opacity }}
                   />
                 </div>
+              </div>
 
-                {/* Opacity Slider */}
-                <div className="card-lg">
-                  <div className="flex items-center justify-between mb-4">
-                    <label className="text-title text-white">
-                      Opacity Control
-                    </label>
-                    <span className="badge badge-primary">
-                      {Math.round(opacity * 100)}%
-                    </span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0.1"
-                    max="1"
-                    step="0.05"
-                    value={opacity}
-                    onChange={(e) => setOpacity(parseFloat(e.target.value))}
-                    className="w-full h-3 bg-white/20 rounded-full appearance-none cursor-pointer accent-cyan-500"
-                  />
-                  <div className="flex justify-between text-sm text-slate-400 mt-2">
-                    <span>Transparent</span>
-                    <span>Opaque</span>
-                  </div>
+              {/* Opacity Slider */}
+              <div className="glass-card p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-semibold text-white">Opacity Control</h4>
+                  <span className="badge badge-primary">{Math.round(opacity * 100)}%</span>
                 </div>
-
-                {/* Legend */}
-                <div className="card-lg">
-                  <p className="text-title text-white mb-4">
-                    Heatmap Legend
-                  </p>
-                  <div className="flex items-center gap-4">
-                    <div className="flex-1 h-6 rounded-lg bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-500" />
-                  </div>
-                  <div className="flex justify-between text-sm text-gray-600 mt-2">
-                    <span>Low Attention</span>
-                    <span>High Attention</span>
-                  </div>
+                <input
+                  type="range"
+                  min="0.1"
+                  max="1"
+                  step="0.05"
+                  value={opacity}
+                  onChange={(e) => setOpacity(parseFloat(e.target.value))}
+                  className="w-full"
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-2">
+                  <span>Transparent</span>
+                  <span>Opaque</span>
                 </div>
               </div>
-            )}
-          </div>
+
+              {/* Legend */}
+              <div className="glass-card p-6">
+                <h4 className="font-semibold text-white mb-4">Heatmap Legend</h4>
+                <div className="h-6 rounded-lg bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-500" />
+                <div className="flex justify-between text-sm text-slate-400 mt-3">
+                  <span>Low Attention</span>
+                  <span>High Attention</span>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
-      </section>
+      </div>
     </div>
   );
 };
