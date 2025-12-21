@@ -49,10 +49,8 @@ const Predict = () => {
       setDicomMetadata(null);
       setSavedToHistory(false);
 
-      // Check if DICOM file
       if (isDicomFile(file)) {
         setIsDicom(true);
-        // Get DICOM preview
         try {
           const dicomPreview = await previewDicom(file);
           setPreview(dicomPreview.image);
@@ -61,7 +59,6 @@ const Predict = () => {
             ...dicomPreview.metadata
           });
         } catch (err) {
-          // If preview fails, no image preview
           setPreview(null);
           console.error("DICOM preview failed:", err);
         }
@@ -83,20 +80,17 @@ const Predict = () => {
       let response: PredictionResponse | DicomPredictionResponse;
 
       if (isDicom) {
-        // Use DICOM-specific prediction
         response = await predictDicom(selectedFile, {
           useMcDropout,
           mcSamples,
           applyWindowing: true
         });
       } else {
-        // Standard image prediction
         response = await predictImage(selectedFile, false, useMcDropout, mcSamples);
       }
 
       setResult(response);
 
-      // Auto-save to history
       try {
         await saveAnalysisToHistory(selectedFile, {
           prediction: response.prediction,
@@ -111,7 +105,6 @@ const Predict = () => {
         setSavedToHistory(true);
       } catch (saveErr) {
         console.error("Failed to save to history:", saveErr);
-        // Don't show error - analysis still succeeded
       }
 
     } catch (err: unknown) {
@@ -153,178 +146,112 @@ const Predict = () => {
     setSavedToHistory(false);
   };
 
-  // Helper to get reliability styling
   const getReliabilityStyle = (reliability: string | undefined) => {
     switch (reliability) {
       case "high":
-        return {
-          bg: "bg-emerald-500/10",
-          border: "border-emerald-500/30",
-          text: "text-emerald-400",
-          icon: CheckCircle,
-          label: "High Reliability"
-        };
+        return { bg: "rgba(34, 197, 94, 0.1)", border: "rgba(34, 197, 94, 0.3)", color: "#4ade80", label: "High Reliability" };
       case "medium":
-        return {
-          bg: "bg-amber-500/10",
-          border: "border-amber-500/30",
-          text: "text-amber-400",
-          icon: AlertTriangle,
-          label: "Medium Reliability"
-        };
+        return { bg: "rgba(245, 158, 11, 0.1)", border: "rgba(245, 158, 11, 0.3)", color: "#fbbf24", label: "Medium Reliability" };
       case "low":
-        return {
-          bg: "bg-red-500/10",
-          border: "border-red-500/30",
-          text: "text-red-400",
-          icon: AlertCircle,
-          label: "Low Reliability"
-        };
+        return { bg: "rgba(239, 68, 68, 0.1)", border: "rgba(239, 68, 68, 0.3)", color: "#f87171", label: "Low Reliability" };
       default:
-        return {
-          bg: "bg-slate-500/10",
-          border: "border-slate-500/30",
-          text: "text-slate-400",
-          icon: Info,
-          label: "Unknown"
-        };
+        return { bg: "rgba(148, 163, 184, 0.1)", border: "rgba(148, 163, 184, 0.3)", color: "#94a3b8", label: "Unknown" };
     }
   };
 
   return (
-    <div className="page-container">
+    <div className="sharp-page">
       {/* Page Header */}
-      <section className="section">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-emerald-500/30 rounded-2xl">
-            <Brain className="w-8 h-8 text-emerald-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-white">
-              AI Cancer Detection
-            </h1>
-            <p className="text-slate-400 mt-1">
-              Upload histopathology images for AI-powered analysis with uncertainty estimation
-            </p>
-          </div>
-        </div>
+      <div className="sharp-header">
+        <h1>Histopathology Analysis</h1>
+        <p className="subtitle">AI-powered cancer detection with uncertainty estimation</p>
+      </div>
 
-        {/* Quick Stats */}
-        <div className="flex flex-wrap gap-4 mt-6">
-          <div className="flex items-center gap-2 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 rounded-xl">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-sm font-medium text-emerald-400">92.86% Accuracy</span>
+      {/* Quick Stats */}
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "0.75rem", justifyContent: "center", marginBottom: "2rem" }}>
+        {[
+          { label: "95.4% Accuracy", color: "#10b981" },
+          { label: "ResNet18 Model", color: "#06b6d4" },
+          { label: "MC Dropout", color: "#8b5cf6" },
+          { label: "PDF Reports", color: "#ec4899" },
+          { label: "DICOM Support", color: "#f59e0b" },
+        ].map((stat) => (
+          <div key={stat.label} style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            padding: "0.5rem 1rem",
+            background: `${stat.color}15`,
+            border: `1px solid ${stat.color}40`,
+            borderRadius: "20px",
+            fontSize: "0.85rem",
+            fontWeight: 500,
+            color: stat.color
+          }}>
+            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: stat.color }} />
+            {stat.label}
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/30 rounded-xl">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
-            <span className="text-sm font-medium text-cyan-400">ResNet18 Model</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/30 rounded-xl">
-            <Activity className="w-4 h-4 text-purple-400" />
-            <span className="text-sm font-medium text-purple-400">MC Dropout Uncertainty</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-pink-500/10 border border-pink-500/30 rounded-xl">
-            <FileText className="w-4 h-4 text-pink-400" />
-            <span className="text-sm font-medium text-pink-400">PDF Reports</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-2 bg-orange-500/10 border border-orange-500/30 rounded-xl">
-            <FileImage className="w-4 h-4 text-orange-400" />
-            <span className="text-sm font-medium text-orange-400">DICOM Support</span>
-          </div>
-        </div>
-      </section>
+        ))}
+      </div>
 
-      {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Upload Section */}
-        <div className="space-y-6">
-          {/* Upload Area */}
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
-              Upload Medical Image
-            </h2>
+      {/* Main Content */}
+      <div className="sharp-grid">
+        {/* Left Column */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          {/* Upload Card */}
+          <div className="sharp-card">
+            <h2 style={{ color: "#f1f5f9", marginBottom: "1rem", fontSize: "1.25rem" }}>Upload Medical Image</h2>
 
-            <label className="block cursor-pointer">
-              <div className="upload-zone p-10">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-white/5 border border-white/10 rounded-2xl mb-4">
-                    <Upload className="w-10 h-10 text-slate-400" />
+            <label style={{ cursor: "pointer", display: "block" }}>
+              <div className="sharp-drop-zone">
+                <div style={{ textAlign: "center" }}>
+                  <div style={{
+                    width: "64px", height: "64px",
+                    background: "rgba(139, 92, 246, 0.15)",
+                    borderRadius: "16px",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    margin: "0 auto 1rem"
+                  }}>
+                    <Upload style={{ width: "28px", height: "28px", color: "#8b5cf6" }} />
                   </div>
-                  <p className="text-lg font-medium text-white mb-2">
+                  <p style={{ color: "#f1f5f9", fontWeight: 500, marginBottom: "0.5rem" }}>
                     Drop your image here
                   </p>
-                  <p className="text-sm text-slate-400 mb-3">
-                    or click to browse files
+                  <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>
+                    PNG, JPG, TIFF, DICOM • Max 10MB
                   </p>
-                  <div className="flex items-center gap-3 text-xs text-slate-500">
-                    <span>PNG, JPG, TIFF, DICOM</span>
-                    <span>•</span>
-                    <span>Max 10MB</span>
-                  </div>
                 </div>
               </div>
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*,.dcm,.dicom,application/dicom"
-                onChange={handleFileSelect}
-              />
+              <input type="file" style={{ display: "none" }} accept="image/*,.dcm,.dicom,application/dicom" onChange={handleFileSelect} />
             </label>
           </div>
 
           {/* Image Preview */}
           {preview && (
-            <div className="glass-card p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <h3 className="text-lg font-semibold text-white">Selected Image</h3>
-                  {isDicom && (
-                    <span className="badge badge-warning text-xs">DICOM</span>
-                  )}
+            <div className="sharp-card" style={{ animation: "fadeIn 0.3s ease" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <h3 style={{ color: "#f1f5f9", fontWeight: 600 }}>Selected Image</h3>
+                  {isDicom && <span className="sharp-badge warning">DICOM</span>}
                 </div>
-                <button
-                  onClick={clearSelection}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <XCircle className="w-5 h-5 text-slate-400 hover:text-red-400" />
+                <button onClick={clearSelection} style={{
+                  background: "none", border: "none", cursor: "pointer", padding: "0.5rem",
+                  borderRadius: "8px", transition: "background 0.2s"
+                }}>
+                  <XCircle style={{ width: "20px", height: "20px", color: "#94a3b8" }} />
                 </button>
               </div>
-              <div className="relative rounded-2xl overflow-hidden border border-white/10">
-                <img src={preview} alt="Preview" className="w-full h-auto" />
-              </div>
+              <img src={preview} alt="Preview" style={{ width: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }} />
 
-              {/* DICOM Metadata */}
               {isDicom && dicomMetadata && (
-                <div className="mt-4 p-4 bg-orange-500/5 border border-orange-500/20 rounded-xl">
-                  <div className="flex items-center gap-2 mb-3">
-                    <FileImage className="w-4 h-4 text-orange-400" />
-                    <span className="text-sm font-medium text-orange-400">DICOM Information</span>
+                <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(245, 158, 11, 0.1)", borderRadius: "10px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                    <FileImage style={{ width: "16px", height: "16px", color: "#f59e0b" }} />
+                    <span style={{ fontSize: "0.85rem", fontWeight: 500, color: "#fbbf24" }}>DICOM Information</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-sm">
-                    <div>
-                      <span className="text-slate-500">Modality:</span>
-                      <span className="text-white ml-2">
-                        {(dicomMetadata.modality as { name?: string })?.name || 'Unknown'}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500">Size:</span>
-                      <span className="text-white ml-2">
-                        {Number(dicomMetadata.Rows) || '?'} x {Number(dicomMetadata.Columns) || '?'}
-                      </span>
-                    </div>
-                    {dicomMetadata.StudyDate && (
-                      <div>
-                        <span className="text-slate-500">Study Date:</span>
-                        <span className="text-white ml-2">{String(dicomMetadata.StudyDate)}</span>
-                      </div>
-                    )}
-                    {dicomMetadata.BodyPartExamined && (
-                      <div>
-                        <span className="text-slate-500">Body Part:</span>
-                        <span className="text-white ml-2">{String(dicomMetadata.BodyPartExamined)}</span>
-                      </div>
-                    )}
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", fontSize: "0.85rem" }}>
+                    <div><span style={{ color: "#94a3b8" }}>Modality:</span> <span style={{ color: "#f1f5f9" }}>{(dicomMetadata.modality as { name?: string })?.name || 'Unknown'}</span></div>
+                    <div><span style={{ color: "#94a3b8" }}>Size:</span> <span style={{ color: "#f1f5f9" }}>{Number(dicomMetadata.Rows) || '?'} x {Number(dicomMetadata.Columns) || '?'}</span></div>
                   </div>
                 </div>
               )}
@@ -332,406 +259,246 @@ const Predict = () => {
           )}
 
           {/* MC Dropout Settings */}
-          <div className="glass-card p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <Activity className="w-5 h-5 text-purple-400" />
-              <h3 className="text-lg font-semibold text-white">Uncertainty Estimation</h3>
+          <div className="sharp-card">
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+              <Activity style={{ width: "20px", height: "20px", color: "#8b5cf6" }} />
+              <h3 style={{ color: "#f1f5f9", fontWeight: 600 }}>Uncertainty Estimation</h3>
             </div>
 
-            {/* MC Dropout Toggle */}
-            <div className="flex items-center justify-between mb-4">
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <div>
-                <p className="font-medium text-white">MC Dropout</p>
-                <p className="text-sm text-slate-400">Enable Bayesian uncertainty estimation</p>
+                <p style={{ color: "#f1f5f9", fontWeight: 500, marginBottom: "0.25rem" }}>MC Dropout</p>
+                <p style={{ color: "#94a3b8", fontSize: "0.85rem" }}>Enable Bayesian uncertainty</p>
               </div>
               <button
                 onClick={() => setUseMcDropout(!useMcDropout)}
-                className={`relative w-14 h-7 rounded-full transition-colors ${useMcDropout ? 'bg-purple-500' : 'bg-slate-600'
-                  }`}
+                style={{
+                  width: "56px", height: "28px",
+                  background: useMcDropout ? "#8b5cf6" : "#475569",
+                  borderRadius: "14px", border: "none", cursor: "pointer",
+                  position: "relative", transition: "background 0.3s"
+                }}
               >
-                <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-transform ${useMcDropout ? 'translate-x-8' : 'translate-x-1'
-                  }`} />
+                <div style={{
+                  width: "20px", height: "20px",
+                  background: "white", borderRadius: "50%",
+                  position: "absolute", top: "4px",
+                  left: useMcDropout ? "32px" : "4px",
+                  transition: "left 0.3s"
+                }} />
               </button>
             </div>
 
-            {/* MC Samples Slider */}
             {useMcDropout && (
-              <div className="animate-fade-in">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-slate-300">MC Samples</p>
-                  <span className="badge badge-primary">{mcSamples}</span>
+              <div style={{ animation: "fadeIn 0.3s ease" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "0.5rem" }}>
+                  <span style={{ color: "#94a3b8", fontSize: "0.9rem" }}>MC Samples</span>
+                  <span className="sharp-badge primary">{mcSamples}</span>
                 </div>
                 <input
-                  type="range"
-                  min="10"
-                  max="50"
-                  step="5"
+                  type="range" min="10" max="50" step="5"
                   value={mcSamples}
                   onChange={(e) => setMcSamples(parseInt(e.target.value))}
-                  className="w-full"
+                  style={{ width: "100%", accentColor: "#8b5cf6" }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b", marginTop: "0.25rem" }}>
                   <span>Faster (10)</span>
                   <span>More Accurate (50)</span>
                 </div>
               </div>
             )}
-
-            {/* Info Box */}
-            <div className="mt-4 p-4 bg-purple-500/5 border border-purple-500/20 rounded-xl">
-              <div className="flex items-start gap-3">
-                <Info className="w-4 h-4 text-purple-400 mt-0.5" />
-                <p className="text-sm text-slate-300">
-                  MC Dropout runs multiple predictions to estimate how confident the model is.
-                  Higher samples = more accurate uncertainty, but slower.
-                </p>
-              </div>
-            </div>
           </div>
 
           {/* Analyze Button */}
-          <button
-            onClick={handlePredict}
-            disabled={!selectedFile || loading}
-            className="w-full btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
+          <button onClick={handlePredict} disabled={!selectedFile || loading} className="sharp-btn-primary">
             {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>{useMcDropout ? `Running ${mcSamples} predictions...` : 'Analyzing...'}</span>
-              </>
+              <><div className="sharp-spinner" /><span>{useMcDropout ? `Running ${mcSamples} predictions...` : 'Analyzing...'}</span></>
             ) : (
-              <>
-                <Brain className="w-5 h-5" />
-                <span>Analyze with AI</span>
-              </>
+              <><Brain style={{ width: "20px", height: "20px" }} /><span>Analyze with AI</span></>
             )}
           </button>
 
-          {/* Error Message */}
+          {/* Error */}
           {error && (
-            <div className="glass-card bg-red-500/10 border-red-500/30 p-5 animate-fade-in">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-400" />
-                </div>
+            <div className="sharp-card" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                <AlertCircle style={{ width: "20px", height: "20px", color: "#f87171", flexShrink: 0, marginTop: "2px" }} />
                 <div>
-                  <p className="font-semibold text-red-300 mb-1">Analysis Failed</p>
-                  <p className="text-sm text-red-200/80">{error}</p>
+                  <p style={{ color: "#fca5a5", fontWeight: 600, marginBottom: "0.25rem" }}>Analysis Failed</p>
+                  <p style={{ color: "#fecaca", fontSize: "0.9rem" }}>{error}</p>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Results Section */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <h2 className="text-xl font-semibold text-white">
-                Analysis Results
-              </h2>
+        {/* Right Column - Results */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+              <h2 style={{ color: "#f1f5f9", fontSize: "1.25rem", fontWeight: 600 }}>Analysis Results</h2>
               {savedToHistory && (
-                <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded-full text-xs text-emerald-400">
-                  <CheckCircle className="w-3 h-3" />
-                  Saved
+                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.75rem", background: "rgba(34, 197, 94, 0.15)", border: "1px solid rgba(34, 197, 94, 0.3)", borderRadius: "12px", fontSize: "0.75rem", color: "#4ade80" }}>
+                  <CheckCircle style={{ width: "12px", height: "12px" }} /> Saved
                 </span>
               )}
             </div>
-
-            {/* Download Report Button */}
             {result && selectedFile && (
-              <button
-                onClick={handleDownloadReport}
-                disabled={reportLoading}
-                className="btn-secondary py-2 px-4"
-              >
-                {reportLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Generating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download className="w-4 h-4" />
-                    <span>Download PDF</span>
-                  </>
-                )}
+              <button onClick={handleDownloadReport} disabled={reportLoading} className="sharp-btn-secondary">
+                {reportLoading ? <><div className="sharp-spinner" /><span>Generating...</span></> : <><Download style={{ width: "16px", height: "16px" }} /><span>Download PDF</span></>}
               </button>
             )}
           </div>
 
           {/* Empty State */}
           {!result && !loading && (
-            <div className="glass-card p-12 text-center">
-              <div className="p-5 bg-white/5 border border-white/10 rounded-2xl w-fit mx-auto mb-5">
-                <Brain className="w-12 h-12 text-slate-500" />
+            <div className="sharp-card sharp-empty-state">
+              <div className="icon-wrapper">
+                <Brain style={{ width: "32px", height: "32px", color: "#8b5cf6" }} />
               </div>
-              <h3 className="text-lg font-semibold text-slate-300 mb-2">
-                Waiting for Analysis
-              </h3>
-              <p className="text-slate-500 max-w-sm mx-auto">
-                Upload a histopathology image to receive AI-powered cancer detection with uncertainty estimation
-              </p>
+              <h3>Waiting for Analysis</h3>
+              <p>Upload a histopathology image to receive AI-powered cancer detection</p>
             </div>
           )}
 
           {/* Loading State */}
           {loading && (
-            <div className="glass-card bg-gradient-to-br from-emerald-500/5 to-cyan-500/5 p-12 text-center">
-              <div className="p-5 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl w-fit mx-auto mb-5">
-                <Loader2 className="w-12 h-12 text-emerald-400 animate-spin" />
+            <div className="sharp-card" style={{ textAlign: "center", padding: "4rem 2rem", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.05), rgba(6, 182, 212, 0.05))" }}>
+              <div style={{ width: "80px", height: "80px", background: "rgba(139, 92, 246, 0.15)", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                <Loader2 style={{ width: "40px", height: "40px", color: "#8b5cf6", animation: "spin 1s linear infinite" }} />
               </div>
-              <h3 className="text-lg font-semibold text-white mb-2">
-                AI Analysis in Progress
-              </h3>
-              <p className="text-slate-400">
-                {useMcDropout
-                  ? `Running ${mcSamples} Monte Carlo samples for uncertainty estimation...`
-                  : 'Analyzing tissue sample...'}
-              </p>
+              <h3 style={{ color: "#f1f5f9", marginBottom: "0.5rem" }}>AI Analysis in Progress</h3>
+              <p style={{ color: "#94a3b8" }}>{useMcDropout ? `Running ${mcSamples} Monte Carlo samples...` : 'Analyzing tissue sample...'}</p>
             </div>
           )}
 
           {/* Results */}
           {result && (
-            <div className="space-y-6 animate-fade-in-up">
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", animation: "fadeIn 0.3s ease" }}>
               {/* Diagnosis Card */}
-              <div className={`glass-card overflow-hidden ${result.prediction === "Malignant"
-                ? "bg-gradient-to-br from-red-500/10 to-rose-500/5 border-red-500/30"
-                : "bg-gradient-to-br from-emerald-500/10 to-green-500/5 border-emerald-500/30"
-                }`}>
-                <div className="p-8">
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className={`p-3 rounded-xl ${result.prediction === "Malignant"
-                      ? "bg-red-500/20 border border-red-500/30"
-                      : "bg-emerald-500/20 border border-emerald-500/30"
-                      }`}>
-                      <CheckCircle className={`w-7 h-7 ${result.prediction === "Malignant" ? "text-red-400" : "text-emerald-400"
-                        }`} />
-                    </div>
-                    <div>
-                      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
-                        Diagnosis Result
-                      </p>
-                      <p className={`text-4xl lg:text-5xl font-bold ${result.prediction === "Malignant" ? "text-red-400" : "text-emerald-400"
-                        }`}>
-                        {result.prediction}
-                      </p>
-                    </div>
+              <div className="sharp-card" style={{
+                padding: "2rem",
+                background: result.prediction === "Malignant"
+                  ? "linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05))"
+                  : "linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(22, 163, 74, 0.05))",
+                borderColor: result.prediction === "Malignant" ? "rgba(239, 68, 68, 0.3)" : "rgba(34, 197, 94, 0.3)"
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1rem" }}>
+                  <div style={{
+                    width: "56px", height: "56px",
+                    background: result.prediction === "Malignant" ? "rgba(239, 68, 68, 0.2)" : "rgba(34, 197, 94, 0.2)",
+                    borderRadius: "14px",
+                    display: "flex", alignItems: "center", justifyContent: "center"
+                  }}>
+                    <CheckCircle style={{ width: "28px", height: "28px", color: result.prediction === "Malignant" ? "#f87171" : "#4ade80" }} />
                   </div>
-                  <p className="text-slate-300">
-                    {result.prediction === "Malignant"
-                      ? "Cancerous tissue detected in the sample"
-                      : "No cancer detected in the tissue sample"}
-                  </p>
+                  <div>
+                    <p style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "0.25rem" }}>Diagnosis Result</p>
+                    <p style={{ fontSize: "2.5rem", fontWeight: 700, color: result.prediction === "Malignant" ? "#f87171" : "#4ade80" }}>
+                      {result.prediction}
+                    </p>
+                  </div>
                 </div>
+                <p style={{ color: "#cbd5e1" }}>
+                  {result.prediction === "Malignant" ? "Cancerous tissue detected in the sample" : "No cancer detected in the tissue sample"}
+                </p>
               </div>
 
-              {/* Confidence & Uncertainty Cards - Side by Side */}
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Confidence */}
-                <div className="glass-card bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="p-2 bg-cyan-500/20 border border-cyan-500/30 rounded-lg">
-                      <TrendingUp className="w-5 h-5 text-cyan-400" />
+              {/* Confidence & Uncertainty */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+                <div className="sharp-card" style={{ padding: "1.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                    <div style={{ width: "40px", height: "40px", background: "rgba(6, 182, 212, 0.15)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <TrendingUp style={{ width: "20px", height: "20px", color: "#06b6d4" }} />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-400 uppercase tracking-wider">Confidence</p>
-                      <p className="text-3xl font-bold text-cyan-400">{result.confidence}%</p>
+                      <p style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase" }}>Confidence</p>
+                      <p style={{ fontSize: "1.75rem", fontWeight: 700, color: "#06b6d4" }}>{result.confidence}%</p>
                     </div>
                   </div>
-                  <div className="progress-bar">
-                    <div
-                      className="progress-bar-fill bg-gradient-to-r from-cyan-500 to-blue-400"
-                      style={{ width: `${result.confidence}%` }}
-                    />
-                  </div>
+                  <div className="sharp-progress"><div className="sharp-progress-bar cyan" style={{ width: `${result.confidence}%` }} /></div>
                 </div>
 
-                {/* Uncertainty (if MC Dropout enabled) */}
                 {result.uncertainty && (
-                  <div className="glass-card bg-gradient-to-br from-purple-500/5 to-pink-500/5 p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
-                        <Activity className="w-5 h-5 text-purple-400" />
+                  <div className="sharp-card" style={{ padding: "1.5rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+                      <div style={{ width: "40px", height: "40px", background: "rgba(139, 92, 246, 0.15)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                        <Activity style={{ width: "20px", height: "20px", color: "#8b5cf6" }} />
                       </div>
                       <div>
-                        <p className="text-xs text-slate-400 uppercase tracking-wider">Uncertainty</p>
-                        <p className="text-3xl font-bold text-purple-400">{result.uncertainty.score}%</p>
+                        <p style={{ fontSize: "0.75rem", color: "#94a3b8", textTransform: "uppercase" }}>Uncertainty</p>
+                        <p style={{ fontSize: "1.75rem", fontWeight: 700, color: "#8b5cf6" }}>{result.uncertainty.score}%</p>
                       </div>
                     </div>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-bar-fill bg-gradient-to-r from-purple-500 to-pink-400"
-                        style={{ width: `${result.uncertainty.score}%` }}
-                      />
-                    </div>
+                    <div className="sharp-progress"><div className="sharp-progress-bar purple" style={{ width: `${result.uncertainty.score}%` }} /></div>
                   </div>
                 )}
               </div>
 
-              {/* Reliability Assessment (MC Dropout) */}
+              {/* Reliability */}
               {result.reliability && result.clinical_recommendation && (
-                <div className={`glass-card ${getReliabilityStyle(result.reliability).bg} ${getReliabilityStyle(result.reliability).border} p-6`}>
-                  <div className="flex items-start gap-4">
-                    <div className={`p-3 rounded-xl ${getReliabilityStyle(result.reliability).bg}`}>
-                      {(() => {
-                        const IconComponent = getReliabilityStyle(result.reliability).icon;
-                        return <IconComponent className={`w-6 h-6 ${getReliabilityStyle(result.reliability).text}`} />;
-                      })()}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <h4 className={`font-semibold ${getReliabilityStyle(result.reliability).text}`}>
-                          {getReliabilityStyle(result.reliability).label}
-                        </h4>
-                        {result.n_samples && (
-                          <span className="badge badge-primary text-xs">
-                            {result.n_samples} samples
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-slate-300 text-sm leading-relaxed">
-                        {result.clinical_recommendation}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* PDF Report Card */}
-              <div className="glass-card bg-gradient-to-br from-pink-500/5 to-rose-500/5 border-pink-500/20 p-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-pink-500/20 border border-pink-500/30 rounded-xl">
-                      <FileText className="w-6 h-6 text-pink-400" />
+                <div className="sharp-card" style={{
+                  padding: "1.5rem",
+                  background: getReliabilityStyle(result.reliability).bg,
+                  borderColor: getReliabilityStyle(result.reliability).border
+                }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                    <div style={{
+                      width: "48px", height: "48px",
+                      background: getReliabilityStyle(result.reliability).bg,
+                      borderRadius: "12px",
+                      display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0
+                    }}>
+                      {result.reliability === "high" ? <CheckCircle style={{ width: "24px", height: "24px", color: getReliabilityStyle(result.reliability).color }} /> :
+                        result.reliability === "medium" ? <AlertTriangle style={{ width: "24px", height: "24px", color: getReliabilityStyle(result.reliability).color }} /> :
+                          <AlertCircle style={{ width: "24px", height: "24px", color: getReliabilityStyle(result.reliability).color }} />}
                     </div>
                     <div>
-                      <h4 className="font-semibold text-white">Download Analysis Report</h4>
-                      <p className="text-sm text-slate-400">
-                        Get a comprehensive PDF report with Grad-CAM visualization
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleDownloadReport}
-                    disabled={reportLoading}
-                    className="btn-primary py-3 px-5"
-                  >
-                    {reportLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Download className="w-4 h-4" />
-                        <span>Download PDF</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              {/* Detailed Uncertainty Metrics */}
-              {result.uncertainty && (
-                <div className="glass-card p-6">
-                  <h3 className="text-lg font-semibold text-white mb-4">
-                    Uncertainty Metrics
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-xs text-slate-400 mb-1">Entropy</p>
-                      <p className="text-lg font-semibold text-white">{result.uncertainty.entropy}</p>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-xs text-slate-400 mb-1">Epistemic</p>
-                      <p className="text-lg font-semibold text-white">{result.uncertainty.epistemic}</p>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-xs text-slate-400 mb-1">Coefficient of Variation</p>
-                      <p className="text-lg font-semibold text-white">{result.uncertainty.coefficient_of_variation}%</p>
-                    </div>
-                    <div className="bg-white/5 rounded-xl p-4">
-                      <p className="text-xs text-slate-400 mb-1">Prediction Std</p>
-                      <p className="text-lg font-semibold text-white">
-                        ±{result.std?.benign || 0}% / ±{result.std?.malignant || 0}%
-                      </p>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
+                        <h4 style={{ color: getReliabilityStyle(result.reliability).color, fontWeight: 600 }}>{getReliabilityStyle(result.reliability).label}</h4>
+                        {result.n_samples && <span className="sharp-badge primary">{result.n_samples} samples</span>}
+                      </div>
+                      <p style={{ color: "#cbd5e1", fontSize: "0.9rem", lineHeight: 1.6 }}>{result.clinical_recommendation}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {/* Probability Distribution */}
-              <div className="glass-card p-6">
-                <h3 className="text-lg font-semibold text-white mb-6">
-                  Probability Distribution
-                </h3>
+              <div className="sharp-card" style={{ padding: "1.5rem" }}>
+                <h3 style={{ color: "#f1f5f9", fontWeight: 600, marginBottom: "1.5rem" }}>Probability Distribution</h3>
 
-                <div className="space-y-5">
-                  {/* Benign */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                        <span className="font-medium text-white">Benign</span>
-                        {result.std && (
-                          <span className="text-xs text-slate-500">±{result.std.benign}%</span>
-                        )}
+                {[
+                  { label: "Benign", value: result.probabilities.benign, color: "#22c55e", std: result.std?.benign },
+                  { label: "Malignant", value: result.probabilities.malignant, color: "#ef4444", std: result.std?.malignant }
+                ].map((prob) => (
+                  <div key={prob.label} style={{ marginBottom: "1.25rem" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <div style={{ width: "10px", height: "10px", borderRadius: "50%", background: prob.color }} />
+                        <span style={{ color: "#f1f5f9", fontWeight: 500 }}>{prob.label}</span>
+                        {prob.std && <span style={{ color: "#64748b", fontSize: "0.75rem" }}>±{prob.std}%</span>}
                       </div>
-                      <span className="text-xl font-bold text-emerald-400">
-                        {result.probabilities.benign}%
-                      </span>
+                      <span style={{ fontSize: "1.25rem", fontWeight: 700, color: prob.color }}>{prob.value}%</span>
                     </div>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-bar-fill bg-gradient-to-r from-emerald-500 to-green-400"
-                        style={{ width: `${result.probabilities.benign}%` }}
-                      />
+                    <div className="sharp-progress">
+                      <div className="sharp-progress-bar" style={{ width: `${prob.value}%`, background: `linear-gradient(90deg, ${prob.color}, ${prob.color}bb)` }} />
                     </div>
                   </div>
+                ))}
 
-                  {/* Malignant */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-red-400" />
-                        <span className="font-medium text-white">Malignant</span>
-                        {result.std && (
-                          <span className="text-xs text-slate-500">±{result.std.malignant}%</span>
-                        )}
-                      </div>
-                      <span className="text-xl font-bold text-red-400">
-                        {result.probabilities.malignant}%
-                      </span>
-                    </div>
-                    <div className="progress-bar">
-                      <div
-                        className="progress-bar-fill bg-gradient-to-r from-red-500 to-rose-400"
-                        style={{ width: `${result.probabilities.malignant}%` }}
-                      />
-                    </div>
+                {/* Model Info */}
+                <div style={{ marginTop: "1.5rem", paddingTop: "1rem", borderTop: "1px solid rgba(255,255,255,0.1)", display: "flex", flexWrap: "wrap", gap: "1rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#94a3b8" }}>
+                    <Brain style={{ width: "16px", height: "16px", color: "#8b5cf6" }} /> ResNet18
                   </div>
-                </div>
-
-                {/* Model Info Footer */}
-                <div className="mt-6 pt-4 border-t border-white/10">
-                  <div className="flex flex-wrap items-center gap-4 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Brain className="w-4 h-4 text-purple-400" />
-                      <span className="text-slate-400">ResNet18</span>
+                  {result.mc_dropout_enabled && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#94a3b8" }}>
+                      <Activity style={{ width: "16px", height: "16px", color: "#06b6d4" }} /> MC Dropout ({result.n_samples} samples)
                     </div>
-                    {result.mc_dropout_enabled && (
-                      <div className="flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-cyan-400" />
-                        <span className="text-slate-400">MC Dropout ({result.n_samples} samples)</span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-emerald-400" />
-                      <span className="text-slate-400">92.86% Test Accuracy</span>
-                    </div>
+                  )}
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem", color: "#94a3b8" }}>
+                    <Shield style={{ width: "16px", height: "16px", color: "#10b981" }} /> 95.4% Test Accuracy
                   </div>
                 </div>
               </div>
@@ -739,6 +506,14 @@ const Predict = () => {
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 1024px) {
+          .sharp-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 };

@@ -9,6 +9,8 @@ import {
   Sparkles,
   Grid3x3,
   XCircle,
+  Brain,
+  ScanLine,
 } from "lucide-react";
 import {
   generateGradCAM,
@@ -16,7 +18,10 @@ import {
   type GradCAMComparisonResponse,
 } from "../services/api";
 
+type ModelTab = "histopathology" | "mammography";
+
 const Analysis = () => {
+  const [activeTab, setActiveTab] = useState<ModelTab>("histopathology");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [heatmap, setHeatmap] = useState<string | null>(null);
@@ -78,286 +83,263 @@ const Analysis = () => {
   };
 
   return (
-    <div className="page-container">
-      {/* Page Header */}
-      <section className="section">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="p-3 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 border border-cyan-500/30 rounded-2xl">
-            <Eye className="w-8 h-8 text-cyan-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl lg:text-4xl font-bold text-white">
-              Grad-CAM Analysis
-            </h1>
-            <p className="text-slate-400 mt-1">
-              Visualize AI attention with explainable heatmaps
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Info Box */}
-      <section className="section">
-        <div className="glass-card bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-5">
-          <div className="flex items-start gap-4">
-            <div className="p-2 bg-cyan-500/20 border border-cyan-500/30 rounded-lg">
-              <Info className="w-5 h-5 text-cyan-400" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-white mb-1">What is Grad-CAM?</h4>
-              <p className="text-slate-400 text-sm leading-relaxed">
-                Gradient-weighted Class Activation Mapping highlights which regions of the image
-                most influenced the model's prediction, providing transparency and interpretability.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Content Grid */}
-      <div className="grid lg:grid-cols-2 gap-8">
-        {/* Left Column - Upload & Settings */}
-        <div className="space-y-6">
-          {/* Upload Area */}
-          <div className="glass-card p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">Upload Image</h2>
-
-            <label className="block cursor-pointer">
-              <div className="upload-zone p-10">
-                <div className="flex flex-col items-center text-center">
-                  <div className="p-4 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl mb-4">
-                    <Upload className="w-10 h-10 text-cyan-400" />
-                  </div>
-                  <p className="text-lg font-medium text-white mb-2">
-                    Click to upload or drag and drop
-                  </p>
-                  <p className="text-sm text-slate-400">
-                    PNG, JPG or TIFF up to 10MB
-                  </p>
-                </div>
-              </div>
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileSelect}
-              />
-            </label>
-          </div>
-
-          {/* Image Preview */}
-          {preview && (
-            <div className="glass-card p-6 animate-fade-in-up">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Original Image</h3>
-                <button
-                  onClick={clearSelection}
-                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
-                >
-                  <XCircle className="w-5 h-5 text-slate-400 hover:text-red-400" />
-                </button>
-              </div>
-              <div className="rounded-xl overflow-hidden border border-white/10">
-                <img src={preview} alt="Preview" className="w-full h-auto" />
-              </div>
-            </div>
-          )}
-
-          {/* Method Selection */}
-          <div className="glass-card p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">
-              Visualization Method
-            </h3>
-            <div className="grid grid-cols-3 gap-2">
-              {(["gradcam", "gradcam++", "scorecam"] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => {
-                    setMethod(m);
-                    setCompareMode(false);
-                  }}
-                  className={`px-4 py-3 rounded-xl text-sm font-medium transition-all ${method === m && !compareMode
-                      ? "bg-cyan-500 text-white"
-                      : "bg-white/5 text-slate-300 hover:bg-white/10 border border-white/10"
-                    }`}
-                >
-                  {m === "gradcam++" ? "Grad-CAM++" : m.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Compare Mode Toggle */}
-          <div className="glass-card p-6">
-            <label className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500/20 border border-purple-500/30 rounded-lg">
-                  <Grid3x3 className="w-5 h-5 text-purple-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-white">Compare All Methods</p>
-                  <p className="text-sm text-slate-400">Show all three methods side-by-side</p>
-                </div>
-              </div>
-              <input
-                type="checkbox"
-                checked={compareMode}
-                onChange={(e) => setCompareMode(e.target.checked)}
-                className="w-5 h-5"
-              />
-            </label>
-          </div>
-
-          {/* Generate Button */}
-          <button
-            onClick={handleGenerateHeatmap}
-            disabled={!selectedFile || loading}
-            className="w-full btn-primary py-4 text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-          >
-            {loading ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Generating...</span>
-              </>
-            ) : (
-              <>
-                {compareMode ? <Grid3x3 className="w-5 h-5" /> : <Sparkles className="w-5 h-5" />}
-                <span>{compareMode ? "Compare All Methods" : "Generate Heatmap"}</span>
-              </>
-            )}
-          </button>
-
-          {/* Error */}
-          {error && (
-            <div className="glass-card bg-red-500/10 border-red-500/30 p-5 animate-fade-in">
-              <div className="flex items-start gap-4">
-                <div className="p-2 bg-red-500/20 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-400" />
-                </div>
-                <div>
-                  <p className="font-semibold text-red-300 mb-1">Error</p>
-                  <p className="text-sm text-red-200/80">{error}</p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Right Column - Results */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-white">
-              {compareMode ? "Method Comparison" : "Heatmap Result"}
-            </h2>
-            {heatmap && (
-              <button onClick={handleDownload} className="btn-secondary py-2 px-4">
-                <Download className="w-4 h-4" />
-                <span>Download</span>
-              </button>
-            )}
-          </div>
-
-          {/* Empty State */}
-          {!heatmap && !comparison && !loading && (
-            <div className="glass-card p-12 text-center">
-              <div className="p-5 bg-white/5 border border-white/10 rounded-2xl w-fit mx-auto mb-5">
-                <Eye className="w-12 h-12 text-slate-500" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-300 mb-2">No Heatmap Yet</h3>
-              <p className="text-slate-500">Upload an image to generate visualization</p>
-            </div>
-          )}
-
-          {/* Loading State */}
-          {loading && (
-            <div className="glass-card bg-gradient-to-br from-cyan-500/5 to-blue-500/5 p-12 text-center">
-              <div className="p-5 bg-cyan-500/10 border border-cyan-500/30 rounded-2xl w-fit mx-auto mb-5">
-                <Loader2 className="w-12 h-12 text-cyan-400 animate-spin" />
-              </div>
-              <h3 className="text-lg font-semibold text-white mb-2">Generating Heatmap</h3>
-              <p className="text-slate-400">Computing attention regions...</p>
-            </div>
-          )}
-
-          {/* Comparison View */}
-          {comparison && (
-            <div className="space-y-6 animate-fade-in-up">
-              {Object.entries(comparison.methods).map(([methodName, data]) => (
-                <div key={methodName} className="glass-card p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h4 className="font-semibold text-white">
-                      {methodName === "gradcam++" ? "Grad-CAM++" : methodName.toUpperCase()}
-                    </h4>
-                    <span className={`badge ${data.prediction === "Malignant" ? "badge-danger" : "badge-success"}`}>
-                      {data.prediction}
-                    </span>
-                  </div>
-                  <div className="rounded-xl overflow-hidden border border-white/10">
-                    <img src={data.image} alt={`${methodName} heatmap`} className="w-full h-auto" />
-                  </div>
-                </div>
-              ))}
-
-              {/* Method Info */}
-              <div className="glass-card p-6">
-                <h4 className="font-semibold text-white mb-4">Method Comparison</h4>
-                <div className="space-y-3 text-sm text-slate-300">
-                  <p><strong className="text-white">Grad-CAM:</strong> Original, fast, good quality</p>
-                  <p><strong className="text-white">Grad-CAM++:</strong> Improved with pixel-wise weighting, best quality</p>
-                  <p><strong className="text-white">Score-CAM:</strong> Gradient-free, slowest but robust</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Single Heatmap View */}
-          {heatmap && (
-            <div className="space-y-6 animate-fade-in-up">
-              <div className="glass-card p-5">
-                <div className="rounded-xl overflow-hidden border border-white/10">
-                  <img
-                    src={heatmap}
-                    alt="Grad-CAM Heatmap"
-                    className="w-full h-auto"
-                    style={{ opacity }}
-                  />
-                </div>
-              </div>
-
-              {/* Opacity Slider */}
-              <div className="glass-card p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-semibold text-white">Opacity Control</h4>
-                  <span className="badge badge-primary">{Math.round(opacity * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1"
-                  step="0.05"
-                  value={opacity}
-                  onChange={(e) => setOpacity(parseFloat(e.target.value))}
-                  className="w-full"
-                />
-                <div className="flex justify-between text-xs text-slate-500 mt-2">
-                  <span>Transparent</span>
-                  <span>Opaque</span>
-                </div>
-              </div>
-
-              {/* Legend */}
-              <div className="glass-card p-6">
-                <h4 className="font-semibold text-white mb-4">Heatmap Legend</h4>
-                <div className="h-6 rounded-lg bg-gradient-to-r from-blue-500 via-green-500 via-yellow-500 to-red-500" />
-                <div className="flex justify-between text-sm text-slate-400 mt-3">
-                  <span>Low Attention</span>
-                  <span>High Attention</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+    <div className="sharp-page">
+      {/* Header */}
+      <div className="sharp-header">
+        <h1>Visual Analysis</h1>
+        <p className="subtitle">Explainable AI visualization for model predictions</p>
       </div>
+
+      {/* Tabs */}
+      <div className="sharp-tabs">
+        <button className={`sharp-tab ${activeTab === "histopathology" ? "active" : ""}`} onClick={() => { setActiveTab("histopathology"); clearSelection(); }}>
+          <Brain style={{ width: "18px", height: "18px" }} /> Histopathology
+        </button>
+        <button className={`sharp-tab ${activeTab === "mammography" ? "active" : ""}`} onClick={() => { setActiveTab("mammography"); clearSelection(); }}>
+          <ScanLine style={{ width: "18px", height: "18px" }} /> Mammography
+        </button>
+      </div>
+
+      {/* Histopathology - Grad-CAM */}
+      {activeTab === "histopathology" && (
+        <>
+          {/* Info Box */}
+          <div className="sharp-info-box" style={{ marginBottom: "2rem" }}>
+            <div className="icon"><Info style={{ width: "20px", height: "20px", color: "#06b6d4" }} /></div>
+            <div>
+              <h4>Grad-CAM for Histopathology</h4>
+              <p>Gradient-weighted Class Activation Mapping highlights which regions of the histopathology image most influenced the model's prediction.</p>
+            </div>
+          </div>
+
+          {/* Main Grid */}
+          <div className="sharp-grid">
+            {/* Left Column */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              {/* Upload */}
+              <div className="sharp-card">
+                <h2 style={{ color: "#f1f5f9", marginBottom: "1rem", fontSize: "1.25rem" }}>Upload Image</h2>
+                <label style={{ cursor: "pointer", display: "block" }}>
+                  <div className="sharp-drop-zone">
+                    <div style={{ textAlign: "center" }}>
+                      <div style={{ width: "64px", height: "64px", background: "rgba(6, 182, 212, 0.15)", borderRadius: "16px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1rem" }}>
+                        <Upload style={{ width: "28px", height: "28px", color: "#06b6d4" }} />
+                      </div>
+                      <p style={{ color: "#f1f5f9", fontWeight: 500, marginBottom: "0.5rem" }}>Click to upload or drag and drop</p>
+                      <p style={{ color: "#94a3b8", fontSize: "0.9rem" }}>PNG, JPG or TIFF up to 10MB</p>
+                    </div>
+                  </div>
+                  <input type="file" style={{ display: "none" }} accept="image/*" onChange={handleFileSelect} />
+                </label>
+              </div>
+
+              {/* Preview */}
+              {preview && (
+                <div className="sharp-card" style={{ animation: "fadeIn 0.3s ease" }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                    <h3 style={{ color: "#f1f5f9", fontWeight: 600 }}>Original Image</h3>
+                    <button onClick={clearSelection} style={{ background: "none", border: "none", cursor: "pointer", padding: "0.5rem" }}>
+                      <XCircle style={{ width: "20px", height: "20px", color: "#94a3b8" }} />
+                    </button>
+                  </div>
+                  <img src={preview} alt="Preview" style={{ width: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }} />
+                </div>
+              )}
+
+              {/* Method Selection */}
+              <div className="sharp-card">
+                <h3 style={{ color: "#f1f5f9", marginBottom: "1rem" }}>Visualization Method</h3>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.5rem" }}>
+                  {(["gradcam", "gradcam++", "scorecam"] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => { setMethod(m); setCompareMode(false); }}
+                      style={{
+                        padding: "0.75rem",
+                        background: method === m && !compareMode ? "linear-gradient(135deg, #06b6d4, #0891b2)" : "rgba(255,255,255,0.05)",
+                        border: method === m && !compareMode ? "none" : "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: "10px",
+                        color: method === m && !compareMode ? "white" : "#94a3b8",
+                        fontWeight: 500,
+                        cursor: "pointer",
+                        transition: "all 0.3s"
+                      }}
+                    >
+                      {m === "gradcam++" ? "Grad-CAM++" : m.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Compare Toggle */}
+              <div className="sharp-card">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                    <div style={{ width: "40px", height: "40px", background: "rgba(139, 92, 246, 0.15)", borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                      <Grid3x3 style={{ width: "20px", height: "20px", color: "#8b5cf6" }} />
+                    </div>
+                    <div>
+                      <p style={{ color: "#f1f5f9", fontWeight: 500 }}>Compare All Methods</p>
+                      <p style={{ color: "#94a3b8", fontSize: "0.85rem" }}>Show all three methods side-by-side</p>
+                    </div>
+                  </div>
+                  <input type="checkbox" checked={compareMode} onChange={(e) => setCompareMode(e.target.checked)} style={{ width: "20px", height: "20px", accentColor: "#8b5cf6" }} />
+                </div>
+              </div>
+
+              {/* Generate Button */}
+              <button onClick={handleGenerateHeatmap} disabled={!selectedFile || loading} className="sharp-btn-primary">
+                {loading ? (
+                  <><div className="sharp-spinner" /><span>Generating...</span></>
+                ) : (
+                  <>{compareMode ? <Grid3x3 style={{ width: "20px", height: "20px" }} /> : <Sparkles style={{ width: "20px", height: "20px" }} />}<span>{compareMode ? "Compare All Methods" : "Generate Heatmap"}</span></>
+                )}
+              </button>
+
+              {/* Error */}
+              {error && (
+                <div className="sharp-card" style={{ background: "rgba(239, 68, 68, 0.1)", borderColor: "rgba(239, 68, 68, 0.3)" }}>
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: "1rem" }}>
+                    <AlertCircle style={{ width: "20px", height: "20px", color: "#f87171" }} />
+                    <div>
+                      <p style={{ color: "#fca5a5", fontWeight: 600, marginBottom: "0.25rem" }}>Error</p>
+                      <p style={{ color: "#fecaca", fontSize: "0.9rem" }}>{error}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column - Results */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <h2 style={{ color: "#f1f5f9", fontSize: "1.25rem", fontWeight: 600 }}>{compareMode ? "Method Comparison" : "Heatmap Result"}</h2>
+                {heatmap && (
+                  <button onClick={handleDownload} className="sharp-btn-secondary">
+                    <Download style={{ width: "16px", height: "16px" }} /> Download
+                  </button>
+                )}
+              </div>
+
+              {/* Empty State */}
+              {!heatmap && !comparison && !loading && (
+                <div className="sharp-card sharp-empty-state">
+                  <div className="icon-wrapper"><Eye style={{ width: "32px", height: "32px", color: "#06b6d4" }} /></div>
+                  <h3>No Heatmap Yet</h3>
+                  <p>Upload an image to generate visualization</p>
+                </div>
+              )}
+
+              {/* Loading */}
+              {loading && (
+                <div className="sharp-card" style={{ textAlign: "center", padding: "4rem 2rem", background: "linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(139, 92, 246, 0.05))" }}>
+                  <div style={{ width: "80px", height: "80px", background: "rgba(6, 182, 212, 0.15)", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 1.5rem" }}>
+                    <Loader2 style={{ width: "40px", height: "40px", color: "#06b6d4", animation: "spin 1s linear infinite" }} />
+                  </div>
+                  <h3 style={{ color: "#f1f5f9", marginBottom: "0.5rem" }}>Generating Heatmap</h3>
+                  <p style={{ color: "#94a3b8" }}>Computing attention regions...</p>
+                </div>
+              )}
+
+              {/* Comparison View */}
+              {comparison && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", animation: "fadeIn 0.3s ease" }}>
+                  {Object.entries(comparison.methods).map(([methodName, data]) => (
+                    <div key={methodName} className="sharp-card" style={{ padding: "1.25rem" }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                        <h4 style={{ color: "#f1f5f9", fontWeight: 600 }}>{methodName === "gradcam++" ? "Grad-CAM++" : methodName.toUpperCase()}</h4>
+                        <span className={`sharp-badge ${data.prediction === "Malignant" ? "danger" : "success"}`}>{data.prediction}</span>
+                      </div>
+                      <img src={data.image} alt={`${methodName} heatmap`} style={{ width: "100%", borderRadius: "10px" }} />
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Single Heatmap */}
+              {heatmap && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem", animation: "fadeIn 0.3s ease" }}>
+                  <div className="sharp-card" style={{ padding: "1.25rem" }}>
+                    <img src={heatmap} alt="Grad-CAM Heatmap" style={{ width: "100%", borderRadius: "10px", opacity }} />
+                  </div>
+
+                  {/* Opacity */}
+                  <div className="sharp-card" style={{ padding: "1.25rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+                      <h4 style={{ color: "#f1f5f9", fontWeight: 600 }}>Opacity Control</h4>
+                      <span className="sharp-badge primary">{Math.round(opacity * 100)}%</span>
+                    </div>
+                    <input type="range" min="0.1" max="1" step="0.05" value={opacity} onChange={(e) => setOpacity(parseFloat(e.target.value))} style={{ width: "100%", accentColor: "#8b5cf6" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", color: "#64748b", marginTop: "0.25rem" }}>
+                      <span>Transparent</span><span>Opaque</span>
+                    </div>
+                  </div>
+
+                  {/* Legend */}
+                  <div className="sharp-card" style={{ padding: "1.25rem" }}>
+                    <h4 style={{ color: "#f1f5f9", fontWeight: 600, marginBottom: "1rem" }}>Heatmap Legend</h4>
+                    <div style={{ height: "20px", borderRadius: "10px", background: "linear-gradient(90deg, #3b82f6, #22c55e, #eab308, #ef4444)" }} />
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.85rem", color: "#94a3b8", marginTop: "0.75rem" }}>
+                      <span>Low Attention</span><span>High Attention</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Mammography - Coming Soon */}
+      {activeTab === "mammography" && (
+        <>
+          <div className="sharp-info-box" style={{ marginBottom: "2rem", background: "linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.05))", borderColor: "rgba(139, 92, 246, 0.3)" }}>
+            <div className="icon" style={{ background: "rgba(139, 92, 246, 0.2)" }}><Info style={{ width: "20px", height: "20px", color: "#8b5cf6" }} /></div>
+            <div>
+              <h4>Mammography Visual Analysis</h4>
+              <p>Visual analysis for mammography images is currently in development. For now, please use the Mammography Predict page for BI-RADS classification.</p>
+            </div>
+          </div>
+
+          <div className="sharp-card sharp-placeholder" style={{ padding: "4rem 2rem" }}>
+            <div style={{ width: "100px", height: "100px", background: "rgba(139, 92, 246, 0.15)", borderRadius: "24px", display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 2rem" }}>
+              <ScanLine style={{ width: "48px", height: "48px", color: "#8b5cf6" }} />
+            </div>
+            <h2 style={{ color: "#f1f5f9", fontSize: "1.75rem", marginBottom: "0.75rem" }}>Mammography Grad-CAM Coming Soon</h2>
+            <p style={{ color: "#94a3b8", maxWidth: "500px", margin: "0 auto 2rem" }}>
+              We're working on integrating visual explainability features for our EfficientNet-B2 mammography model.
+            </p>
+
+            <div className="sharp-feature-grid">
+              {[
+                { icon: "🔍", title: "Region Highlighting", desc: "See which areas of the mammogram are most important" },
+                { icon: "📊", title: "Class-specific Maps", desc: "Separate attention maps for each BI-RADS class" },
+                { icon: "📋", title: "Export Reports", desc: "Download detailed analysis with visualizations" },
+              ].map((feature) => (
+                <div key={feature.title} className="sharp-feature-item">
+                  <div className="icon">{feature.icon}</div>
+                  <h4>{feature.title}</h4>
+                  <p>{feature.desc}</p>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ marginTop: "2rem" }}>
+              <a href="/mammography" className="sharp-btn-primary" style={{ display: "inline-flex", width: "auto", background: "linear-gradient(135deg, #8b5cf6, #ec4899)" }}>
+                <ScanLine style={{ width: "18px", height: "18px" }} /> Go to Mammography Predict
+              </a>
+            </div>
+          </div>
+        </>
+      )}
+
+      <style>{`
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 1024px) {
+          .sharp-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
     </div>
   );
 };

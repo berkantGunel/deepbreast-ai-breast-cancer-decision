@@ -20,6 +20,7 @@ env/
 data/raw/
 data/processed/
 data/test_samples/
+data/mammography/
 
 # ------------------------
 # Model files (large)

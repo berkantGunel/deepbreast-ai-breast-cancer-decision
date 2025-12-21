@@ -177,6 +177,60 @@ export const getTrainingHistory =
     return response.data;
   };
 
+// ========================================
+// Mammography Metrics
+// ========================================
+
+export interface MammographyMetricsResponse {
+  success: boolean;
+  model: string;
+  accuracy: number;
+  test_loss: number;
+  class_accuracy: {
+    benign: number;
+    suspicious: number;
+    malignant: number;
+  };
+  best_val_accuracy: number;
+  timestamp: string;
+  classes: string[];
+}
+
+export interface MammographyTrainingHistoryResponse {
+  success: boolean;
+  model: string;
+  config: {
+    epochs: number;
+    batch_size: number;
+    learning_rate: number;
+    image_size: number;
+    classes: string[];
+    mixed_precision: boolean;
+  };
+  history: Array<{
+    epoch: number;
+    train_loss: number;
+    val_loss: number;
+    train_acc: number;
+    val_acc: number;
+    val_class_acc?: {
+      benign: number;
+      suspicious: number;
+      malignant: number;
+    };
+  }>;
+}
+
+export const getMammographyMetrics = async (): Promise<MammographyMetricsResponse> => {
+  const response = await api.get<MammographyMetricsResponse>("/mammography/metrics");
+  return response.data;
+};
+
+export const getMammographyTrainingHistory = async (): Promise<MammographyTrainingHistoryResponse> => {
+  const response = await api.get<MammographyTrainingHistoryResponse>("/mammography/training-history");
+  return response.data;
+};
+
 // PDF Report Generation
 export interface ReportPreviewResponse {
   success: boolean;
@@ -639,5 +693,106 @@ export const saveAnalysisToHistory = async (
 
 export default api;
 
+// ========================================
+// Mammography Analysis (BI-RADS)
+// ========================================
 
+export interface MammographyRecommendation {
+  action: string;
+  urgency: "low" | "medium" | "high";
+  description: string;
+  next_steps: string[];
+}
 
+export interface MammographyPredictionResponse {
+  success: boolean;
+  prediction: "Benign" | "Suspicious" | "Malignant";
+  predicted_class: number;
+  confidence: number;
+  birads_category: string;
+  probabilities: {
+    benign: number;
+    suspicious: number;
+    malignant: number;
+  };
+  recommendation: MammographyRecommendation;
+  model_info: {
+    type: string;
+    input_size: number;
+    classes: string[];
+  };
+}
+
+export interface MammographyInfoResponse {
+  title: string;
+  description: string;
+  classes: Record<string, {
+    birads: string;
+    description: string;
+    action: string;
+  }>;
+  dataset: {
+    name: string;
+    description: string;
+    source: string;
+  };
+  model: {
+    architecture: string;
+    input_size: string;
+    preprocessing: string;
+  };
+  disclaimer: string;
+}
+
+export interface MammographyHealthResponse {
+  status: "healthy" | "unhealthy";
+  model_loaded: boolean;
+  device: string;
+  model_type: string;
+  error?: string;
+}
+
+// Predict mammography
+export const predictMammography = async (
+  file: File,
+  skipValidation: boolean = false
+): Promise<MammographyPredictionResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("skip_validation", skipValidation.toString());
+
+  const response = await api.post<MammographyPredictionResponse>(
+    "/mammography/predict",
+    formData,
+    {
+      headers: { "Content-Type": "multipart/form-data" },
+    }
+  );
+
+  return response.data;
+};
+
+// Get mammography info
+export const getMammographyInfo = async (): Promise<MammographyInfoResponse> => {
+  const response = await api.get<MammographyInfoResponse>("/mammography/info");
+  return response.data;
+};
+
+// Check mammography health
+export const getMammographyHealth = async (): Promise<MammographyHealthResponse> => {
+  const response = await api.get<MammographyHealthResponse>("/mammography/health");
+  return response.data;
+};
+
+// Helper to check if file is a mammogram (basic check by name)
+export const isMammographyFile = (file: File): boolean => {
+  const name = file.name.toLowerCase();
+  // Common mammography naming patterns
+  return (
+    name.includes("mammo") ||
+    name.includes("mlo") ||
+    name.includes("cc") ||
+    name.includes("breast") ||
+    name.includes("birads")
+  );
+};

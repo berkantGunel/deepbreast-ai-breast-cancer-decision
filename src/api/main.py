@@ -2,7 +2,7 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.endpoints import predict, gradcam, metrics, report, dicom, history
+from src.api.endpoints import predict, gradcam, metrics, report, dicom, history, mammography
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -29,6 +29,7 @@ app.include_router(metrics.router, prefix="/api", tags=["Metrics"])
 app.include_router(report.router, prefix="/api", tags=["Reports"])
 app.include_router(dicom.router, prefix="/api", tags=["DICOM"])
 app.include_router(history.router, prefix="/api", tags=["History & Batch"])
+app.include_router(mammography.router, prefix="/api", tags=["Mammography"])
 
 @app.get("/")
 async def root():
@@ -38,6 +39,7 @@ async def root():
         "version": "2.3.0",
         "features": [
             "Cancer Detection (Histopathology)",
+            "Mammography Analysis (BI-RADS)",
             "MC Dropout Uncertainty",
             "Grad-CAM Visualization",
             "PDF Reports",

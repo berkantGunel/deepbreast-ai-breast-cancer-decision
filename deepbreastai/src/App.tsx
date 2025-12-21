@@ -6,6 +6,7 @@ import Analysis from "./pages/Analysis";
 import Metrics from "./pages/Metrics";
 import About from "./pages/About";
 import History from "./pages/History";
+import MammographyPredict from "./pages/MammographyPredict";
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/predict" element={<Predict />} />
+            <Route path="/mammography" element={<MammographyPredict />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/metrics" element={<Metrics />} />
             <Route path="/history" element={<History />} />
@@ -31,4 +33,3 @@ function App() {
 }
 
 export default App;
-
