@@ -97,27 +97,36 @@ def run_analysis():
     if 'gradcam_base_image' not in st.session_state:
         st.session_state.gradcam_base_image = None
     
-    if st.button("🧠 Generate Grad-CAM Heatmap"):
-        try:
-            with st.spinner("Generating Grad-CAM heatmap..."):
-                temp_path = "temp_analysis_image.png"
-                image.save(temp_path)
-                gradcam_img, _ = generate_gradcam(
-                    model, temp_path, 
-                    target_layer_name="conv4", 
-                    device=device
-                )
-                print(f"[DEBUG] Grad-CAM size: {gradcam_img.size}")
-                os.remove(temp_path)
-                
-                # Store in session state
-                st.session_state.gradcam_result = gradcam_img
-                st.session_state.gradcam_base_image = image
-                st.success("✅ Grad-CAM heatmap generated!")
-        except Exception as e:
-            st.error(f"❌ Grad-CAM generation error: {str(e)}")
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
+    col1, col2 = st.columns([3, 1])
+    
+    with col1:
+        if st.button("🧠 Generate Grad-CAM Heatmap"):
+            try:
+                with st.spinner("Generating Grad-CAM heatmap..."):
+                    temp_path = "temp_analysis_image.png"
+                    image.save(temp_path)
+                    gradcam_img, _ = generate_gradcam(
+                        model, temp_path,
+                        target_layer_name="conv4",
+                        device=device
+                    )
+                    os.remove(temp_path)
+                    
+                    # Store in session state
+                    st.session_state.gradcam_result = gradcam_img
+                    st.session_state.gradcam_base_image = image
+                    st.success("✅ Grad-CAM heatmap generated!")
+            except Exception as e:
+                st.error(f"❌ Grad-CAM generation error: {str(e)}")
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+    
+    with col2:
+        if st.session_state.gradcam_result is not None:
+            if st.button("🗑️ Clear"):
+                st.session_state.gradcam_result = None
+                st.session_state.gradcam_base_image = None
+                st.rerun()
     
     # Display with transparency slider (only if Grad-CAM exists)
     if st.session_state.gradcam_result is not None:

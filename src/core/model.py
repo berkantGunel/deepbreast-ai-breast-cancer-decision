@@ -1,9 +1,15 @@
 """Defines the convolutional neural network architecture used for benign versus
-malignant histopathology classification."""
+malignant histopathology classification.
+
+Includes:
+- BreastCancerCNN: Original baseline model (v1.0)
+- ResNetTransfer: Transfer learning with ResNet18 (v2.0)
+"""
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torchvision import models
 
 class BreastCancerCNN(nn.Module):
     def __init__(self):
@@ -42,3 +48,92 @@ class BreastCancerCNN(nn.Module):
         #Final logits (no softmax here, handled by loss function)
         #Softmax, is the activation function that gives the probability distribution for each class.
         return self.fc2(x)
+
+
+# ============================================================================
+# Transfer Learning Model with ResNet18 (v2.0)
+# ============================================================================
+
+class ResNetTransfer(nn.Module):
+    """
+    Transfer Learning model using ResNet18 pre-trained on ImageNet.
+    
+    Strategy: Fine-tuning
+    - Load ResNet18 with ImageNet weights (1.2M images, 1000 classes)
+    - Replace final layer for binary classification (Benign/Malignant)
+    - Fine-tune all layers with small learning rate
+    
+    Expected Improvement: 89% → 92-94% accuracy
+    """
+    
+    def __init__(self, pretrained=True, num_classes=2, freeze_backbone=False):
+        """
+        Args:
+            pretrained (bool): Use ImageNet pre-trained weights
+            num_classes (int): Number of output classes (2 for binary)
+            freeze_backbone (bool): If True, only train final layer (feature extraction)
+                                   If False, fine-tune all layers (recommended)
+        """
+        super(ResNetTransfer, self).__init__()
+        
+        # Load pre-trained ResNet18
+        self.model = models.resnet18(pretrained=pretrained)
+        
+        # Get input features of the final layer
+        num_features = self.model.fc.in_features  # 512 for ResNet18
+        
+        # Replace final fully-connected layer
+        # Original: 512 → 1000 (ImageNet classes)
+        # New: 512 → 2 (Benign/Malignant)
+        self.model.fc = nn.Sequential(
+            nn.Dropout(0.5),  # Regularization
+            nn.Linear(num_features, num_classes)
+        )
+        
+        # Optional: Freeze backbone layers (feature extraction mode)
+        if freeze_backbone:
+            for name, param in self.model.named_parameters():
+                if 'fc' not in name:  # Don't freeze final layer
+                    param.requires_grad = False
+    
+    def forward(self, x):
+        """Forward pass through ResNet."""
+        return self.model(x)
+    
+    def unfreeze_backbone(self):
+        """Unfreeze all layers for fine-tuning."""
+        for param in self.model.parameters():
+            param.requires_grad = True
+
+
+# ============================================================================
+# Model Factory Function
+# ============================================================================
+
+def get_model(model_name='resnet18', pretrained=True, num_classes=2):
+    """
+    Factory function to create models.
+    
+    Args:
+        model_name (str): 'baseline' or 'resnet18'
+        pretrained (bool): Use pre-trained weights (only for ResNet)
+        num_classes (int): Number of output classes
+    
+    Returns:
+        nn.Module: Initialized model
+    
+    Example:
+        >>> model = get_model('resnet18', pretrained=True)
+        >>> model = get_model('baseline')  # Original CNN
+    """
+    
+    if model_name.lower() == 'baseline':
+        print("📦 Loading Baseline CNN (v1.0)")
+        return BreastCancerCNN()
+    
+    elif model_name.lower() == 'resnet18':
+        print(f"🔥 Loading ResNet18 Transfer Learning (pretrained={pretrained})")
+        return ResNetTransfer(pretrained=pretrained, num_classes=num_classes)
+    
+    else:
+        raise ValueError(f"Unknown model: {model_name}. Choose 'baseline' or 'resnet18'")
