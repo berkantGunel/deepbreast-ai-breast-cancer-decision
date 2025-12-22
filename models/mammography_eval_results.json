@@ -1,12 +1,12 @@
 {
     "model": "efficientnet_b2_mammography",
-    "test_loss": 0.7743058670312166,
-    "test_accuracy": 63.72745490981964,
+    "test_loss": 0.8185283876955509,
+    "test_accuracy": 67.53507014028057,
     "test_class_accuracy": {
-        "benign": 67.85714285714286,
-        "suspicious": 55.51020408163265,
-        "malignant": 79.06976744186046
+        "benign": 69.04761904761905,
+        "suspicious": 66.12244897959184,
+        "malignant": 68.6046511627907
     },
-    "best_val_accuracy": 64.92985971943888,
-    "timestamp": "2025-12-21T16:21:29.750090"
+    "best_val_accuracy": 65.33066132264528,
+    "timestamp": "2025-12-22T22:59:07.817038"
 }

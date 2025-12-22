@@ -124,7 +124,7 @@ const Home = () => {
                 </div>
                 <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
                   <div style={{ flex: 1, padding: "0.75rem", background: "rgba(139, 92, 246, 0.1)", borderRadius: "8px", textAlign: "center" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#8b5cf6" }}>63.7%</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#8b5cf6" }}>67.5%</div>
                     <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Accuracy</div>
                   </div>
                   <div style={{ flex: 1, padding: "0.75rem", background: "rgba(236, 72, 153, 0.1)", borderRadius: "8px", textAlign: "center" }}>

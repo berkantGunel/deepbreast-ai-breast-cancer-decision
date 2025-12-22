@@ -8,17 +8,14 @@ import {
   Github,
   Mail,
   GraduationCap,
-  Database,
-  Cpu,
   AlertTriangle,
-  Heart,
   ScanLine,
 } from "lucide-react";
 
 const About = () => {
   const features = [
     { icon: Brain, title: "Deep Learning", description: "Advanced CNN architectures trained on 277,000+ histopathology images and mammography datasets.", color: "#06b6d4" },
-    { icon: Target, title: "High Accuracy", description: "95.4% histopathology accuracy and 63.7% mammography accuracy with BI-RADS classification.", color: "#10b981" },
+    { icon: Target, title: "High Accuracy", description: "95.4% histopathology accuracy and 65.1% mammography accuracy with BI-RADS classification.", color: "#10b981" },
     { icon: Zap, title: "Real-time Analysis", description: "Lightning-fast GPU inference with results in under 2 seconds.", color: "#f59e0b" },
     { icon: Shield, title: "Explainable AI", description: "Grad-CAM visualizations show which tissue regions influenced the diagnosis.", color: "#8b5cf6" },
     { icon: Users, title: "Clinical Support", description: "Decision support tool for pathologists, augmenting human expertise with AI.", color: "#ec4899" },
@@ -46,7 +43,7 @@ const About = () => {
         { label: "Input Size", value: "224x224 grayscale" },
         { label: "Output", value: "3-class BI-RADS" },
         { label: "Dataset", value: "CBIS-DDSM" },
-        { label: "Test Accuracy", value: "63.7%" },
+        { label: "Test Accuracy", value: "65.1%" },
       ],
       color: "#8b5cf6"
     }

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { predictMammography } from "../services/api";
 import type { MammographyPredictionResponse } from "../services/api";
+import { generatePDFReport } from "../utils/pdfReport";
 import "./MammographyPredict.css";
 
 function MammographyPredict() {
@@ -100,6 +101,25 @@ function MammographyPredict() {
         setPreviewUrl(null);
         setPrediction(null);
         setError(null);
+    };
+
+    const handleDownloadPDF = async () => {
+        if (!prediction) return;
+
+        try {
+            await generatePDFReport({
+                type: "mammography",
+                prediction: prediction.prediction,
+                confidence: prediction.confidence,
+                probabilities: prediction.probabilities,
+                biradsCategory: prediction.birads_category,
+                recommendation: prediction.recommendation,
+                imageUrl: previewUrl || undefined,
+                timestamp: new Date().toISOString(),
+            });
+        } catch (err) {
+            console.error("PDF generation failed:", err);
+        }
     };
 
     return (
@@ -335,6 +355,32 @@ function MammographyPredict() {
                                     </ul>
                                 </div>
                             </div>
+
+                            {/* PDF Download Button */}
+                            <button
+                                className="card"
+                                onClick={handleDownloadPDF}
+                                style={{
+                                    width: "100%",
+                                    padding: "1rem 1.5rem",
+                                    background: "linear-gradient(135deg, #8b5cf6, #06b6d4)",
+                                    border: "none",
+                                    borderRadius: "12px",
+                                    color: "white",
+                                    fontSize: "1rem",
+                                    fontWeight: 600,
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    gap: "0.5rem",
+                                    transition: "transform 0.2s ease",
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.transform = "translateY(-2px)"}
+                                onMouseOut={(e) => e.currentTarget.style.transform = "translateY(0)"}
+                            >
+                                📄 Download PDF Report
+                            </button>
 
                             {/* Disclaimer */}
                             <div className="card disclaimer-card">

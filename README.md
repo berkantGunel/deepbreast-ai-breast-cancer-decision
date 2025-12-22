@@ -474,3 +474,40 @@ _Software Engineering Student_
 _Graduation Project - 2025_
 
 </div>
+
+---
+
+## 🔮 Future Works
+
+### Planned UI Improvements
+
+| Priority | Feature | Description | Status |
+|----------|---------|-------------|--------|
+| 1 | **Doğruluk Değerini Güncelleme** | Mammography model doğruluk değerini en son eğitim sonuçlarına göre güncelle (65.1%) | ✅ Completed |
+| 2 | **Dashboard / Özet Sayfası** | Toplam analiz sayısı, özet grafikler ve sistem durumu içeren kapsamlı dashboard ekle | ✅ Completed |
+| 3 | **Karşılaştırma Görünümü** | Hasta ilerlemesini takip için yan yana görsel karşılaştırma sayfası | ✅ Completed |
+| 4 | **PDF Rapor İndirme** | Hastane logosu, hasta bilgisi ve analiz sonuçlarını içeren profesyonel PDF rapor oluşturma | ✅ Completed |
+| 5 | **Mobil Responsive İyileştirmeler** | Tablet ve mobil cihazlar için geliştirilmiş responsive tasarım | ✅ Completed |
+
+### Implementation Timeline
+
+1. **Phase 1** (v3.1): ✅ Doğruluk güncellemesi + Dashboard sayfası - TAMAMLANDI
+2. **Phase 2** (v3.2): ✅ Karşılaştırma görünümü + PDF export - TAMAMLANDI
+3. **Phase 3** (v3.3): ✅ Mobil responsive iyileştirmeler - TAMAMLANDI
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+## 🙏 Acknowledgments
+
+- [BreakHis Dataset](https://web.inf.ufpr.br/vri/databases/breast-histopathology-database/) - Breast Histopathology Images
+- [CBIS-DDSM Dataset](https://wiki.cancerimagingarchive.net/display/Public/CBIS-DDSM) - Mammography Images
+- [PyTorch](https://pytorch.org/) - Deep Learning Framework
+- [FastAPI](https://fastapi.tiangolo.com/) - Modern Web Framework
+- [React](https://reactjs.org/) - UI Library
+

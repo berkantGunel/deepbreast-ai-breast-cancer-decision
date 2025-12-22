@@ -796,3 +796,58 @@ export const isMammographyFile = (file: File): boolean => {
     name.includes("birads")
   );
 };
+
+// ========================================
+// Mammography Grad-CAM
+// ========================================
+
+export const generateMammographyGradCAM = async (
+  file: File,
+  method: "gradcam" | "gradcam++" = "gradcam++"
+): Promise<Blob> => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("method", method);
+
+  const response = await api.post("/mammography/gradcam", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+    responseType: "blob",
+  });
+
+  return response.data;
+};
+
+export interface MammographyGradCAMComparisonResult {
+  image: string;
+  prediction: string;
+  birads: string;
+}
+
+export interface MammographyGradCAMComparisonResponse {
+  success: boolean;
+  methods: {
+    gradcam: MammographyGradCAMComparisonResult;
+    "gradcam++": MammographyGradCAMComparisonResult;
+  };
+}
+
+export const compareMammographyGradCAM = async (
+  file: File
+): Promise<MammographyGradCAMComparisonResponse> => {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await api.post<MammographyGradCAMComparisonResponse>(
+    "/mammography/gradcam/compare",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
+
+  return response.data;
+};

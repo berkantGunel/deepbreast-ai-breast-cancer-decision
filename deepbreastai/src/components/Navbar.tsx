@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Brain, Eye, BarChart3, Info, Menu, X, Clock, ScanLine } from "lucide-react";
+import { Home, Brain, Eye, BarChart3, Info, Menu, X, Clock, ScanLine, LayoutDashboard, GitCompare } from "lucide-react";
 import { useState } from "react";
 
 const Navbar = () => {
@@ -10,8 +10,10 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/", label: "Home", icon: Home },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/predict", label: "Histopathology", icon: Brain },
     { path: "/mammography", label: "Mammography", icon: ScanLine },
+    { path: "/comparison", label: "Compare", icon: GitCompare },
     { path: "/analysis", label: "Analysis", icon: Eye },
     { path: "/metrics", label: "Metrics", icon: BarChart3 },
     { path: "/history", label: "History", icon: Clock },

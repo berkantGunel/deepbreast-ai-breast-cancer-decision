@@ -16,6 +16,7 @@ import torch.nn.functional as F
 from torch.cuda.amp import autocast
 from PIL import Image
 import io
+import base64
 import numpy as np
 import cv2
 from pathlib import Path
@@ -309,3 +310,209 @@ async def mammography_health():
             "status": "unhealthy",
             "error": str(e)
         }
+
+
+# ========================================
+# Mammography Grad-CAM Endpoints
+# ========================================
+
+class MammographyGradCAM:
+    """Grad-CAM implementation for EfficientNet-B2 mammography model."""
+    
+    def __init__(self, model, device):
+        self.model = model
+        self.device = device
+        self.gradients = None
+        self.activations = None
+        
+        # Hook the last convolutional layer (EfficientNet features)
+        self._register_hooks()
+    
+    def _register_hooks(self):
+        """Register forward and backward hooks."""
+        # For EfficientNet, we target the last block of features
+        target_layer = self.model.model.features[-1]
+        
+        def save_gradient(module, grad_input, grad_output):
+            self.gradients = grad_output[0]
+        
+        def save_activation(module, input, output):
+            self.activations = output
+        
+        target_layer.register_forward_hook(save_activation)
+        target_layer.register_backward_hook(save_gradient)
+    
+    def generate_cam(self, input_tensor, method="gradcam++"):
+        """Generate CAM heatmap."""
+        self.model.eval()
+        
+        # Forward pass
+        output = self.model(input_tensor)
+        pred_class = output.argmax(dim=1).item()
+        
+        # Backward pass
+        self.model.zero_grad()
+        one_hot = torch.zeros_like(output)
+        one_hot[0, pred_class] = 1
+        output.backward(gradient=one_hot, retain_graph=True)
+        
+        # Get gradients and activations
+        gradients = self.gradients.detach()
+        activations = self.activations.detach()
+        
+        if method == "gradcam++":
+            # Grad-CAM++ weights
+            grads_power_2 = gradients ** 2
+            grads_power_3 = gradients ** 3
+            sum_activations = torch.sum(activations, dim=(2, 3), keepdim=True)
+            eps = 1e-7
+            aij = grads_power_2 / (2 * grads_power_2 + sum_activations * grads_power_3 + eps)
+            weights = torch.sum(aij * torch.relu(gradients), dim=(2, 3), keepdim=True)
+        else:
+            # Standard Grad-CAM
+            weights = torch.mean(gradients, dim=(2, 3), keepdim=True)
+        
+        # Weighted combination
+        cam = torch.sum(weights * activations, dim=1, keepdim=True)
+        cam = torch.relu(cam)
+        
+        # Normalize
+        cam = cam - cam.min()
+        cam = cam / (cam.max() + 1e-7)
+        
+        return cam.squeeze().cpu().numpy(), pred_class
+    
+    def visualize(self, original_image, cam, alpha=0.5):
+        """Create heatmap overlay on original image."""
+        import cv2
+        
+        # Resize CAM to image size
+        img_array = np.array(original_image)
+        cam_resized = cv2.resize(cam, (img_array.shape[1], img_array.shape[0]))
+        
+        # Create heatmap
+        heatmap = cv2.applyColorMap(np.uint8(255 * cam_resized), cv2.COLORMAP_JET)
+        heatmap = cv2.cvtColor(heatmap, cv2.COLOR_BGR2RGB)
+        
+        # Overlay
+        overlay = np.uint8(alpha * heatmap + (1 - alpha) * img_array)
+        
+        return Image.fromarray(overlay)
+
+
+@router.post("/mammography/gradcam")
+async def generate_mammography_gradcam(
+    file: UploadFile = File(...),
+    method: str = Form("gradcam++")
+):
+    """
+    Generate Grad-CAM heatmap for mammography image.
+    
+    Args:
+        file: Uploaded mammography image
+        method: XAI method ('gradcam' or 'gradcam++')
+    
+    Returns:
+        PNG image with heatmap overlay
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    valid_methods = ["gradcam", "gradcam++"]
+    if method not in valid_methods:
+        raise HTTPException(status_code=400, detail=f"Invalid method. Choose from: {valid_methods}")
+    
+    try:
+        # Read image
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        
+        # Load model
+        model, device = get_mammography_model_cached()
+        
+        # Preprocess
+        tensor = preprocess_mammography_image(image, device)
+        tensor.requires_grad = True
+        
+        # Generate Grad-CAM
+        gradcam = MammographyGradCAM(model, device)
+        cam, pred_class = gradcam.generate_cam(tensor, method=method)
+        
+        # Create visualization
+        overlay = gradcam.visualize(image, cam)
+        
+        # Convert to bytes
+        img_byte_arr = io.BytesIO()
+        overlay.save(img_byte_arr, format='PNG')
+        img_byte_arr.seek(0)
+        
+        from fastapi.responses import Response
+        return Response(
+            content=img_byte_arr.getvalue(),
+            media_type="image/png",
+            headers={
+                "X-Prediction": CLASS_NAMES[pred_class],
+                "X-Method": method
+            }
+        )
+        
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] Mammography Grad-CAM error: {str(e)}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Grad-CAM error: {str(e)}")
+
+
+@router.post("/mammography/gradcam/compare")
+async def compare_mammography_gradcam(file: UploadFile = File(...)):
+    """
+    Generate both Grad-CAM methods for comparison.
+    
+    Returns:
+        JSON with base64-encoded images for gradcam and gradcam++ methods
+    """
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    
+    try:
+        contents = await file.read()
+        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        
+        model, device = get_mammography_model_cached()
+        tensor = preprocess_mammography_image(image, device)
+        tensor.requires_grad = True
+        
+        results = {}
+        methods = ["gradcam", "gradcam++"]
+        
+        for method_name in methods:
+            # Reload model for fresh gradients
+            model, device = get_mammography_model_cached()
+            tensor = preprocess_mammography_image(image, device)
+            tensor.requires_grad = True
+            
+            gradcam = MammographyGradCAM(model, device)
+            cam, pred_class = gradcam.generate_cam(tensor, method=method_name)
+            overlay = gradcam.visualize(image, cam)
+            
+            # Convert to base64
+            img_byte_arr = io.BytesIO()
+            overlay.save(img_byte_arr, format='PNG')
+            img_base64 = base64.b64encode(img_byte_arr.getvalue()).decode()
+            
+            results[method_name] = {
+                "image": f"data:image/png;base64,{img_base64}",
+                "prediction": CLASS_NAMES[pred_class],
+                "birads": BIRADS_MAPPING[CLASS_NAMES[pred_class]]
+            }
+        
+        return JSONResponse(content={
+            "success": True,
+            "methods": results
+        })
+        
+    except Exception as e:
+        import traceback
+        print(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Comparison error: {str(e)}")
+

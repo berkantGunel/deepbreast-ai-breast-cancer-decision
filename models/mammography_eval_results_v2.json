@@ -1,0 +1,33 @@
+{
+    "model": "efficientnet_b2_mammography_v2",
+    "test_loss": 0.33837841893546283,
+    "test_accuracy": 65.13026052104209,
+    "test_f1_macro": 0.6424041297935104,
+    "test_f1_weighted": 0.6559614804830901,
+    "test_precision": 0.6371411620839539,
+    "test_recall": 0.6755418446448346,
+    "test_class_accuracy": {
+        "benign": 64.28571428571429,
+        "suspicious": 61.63265306122449,
+        "malignant": 76.74418604651163
+    },
+    "best_val_accuracy": 68.13627254509018,
+    "best_val_f1": 0.6671915818257282,
+    "training_epochs": 40,
+    "timestamp": "2025-12-21T23:31:04.276279",
+    "config": {
+        "epochs": 50,
+        "batch_size": 16,
+        "learning_rate": 0.0003,
+        "image_size": 384,
+        "classes": [
+            "benign",
+            "suspicious",
+            "malignant"
+        ],
+        "focal_gamma": 2.0,
+        "label_smoothing": 0.1,
+        "mixup": true,
+        "mixed_precision": true
+    }
+}

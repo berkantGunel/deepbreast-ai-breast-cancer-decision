@@ -7,6 +7,8 @@ import Metrics from "./pages/Metrics";
 import About from "./pages/About";
 import History from "./pages/History";
 import MammographyPredict from "./pages/MammographyPredict";
+import Dashboard from "./pages/Dashboard";
+import Comparison from "./pages/Comparison";
 
 function App() {
   return (
@@ -19,8 +21,10 @@ function App() {
         <main className="w-full">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/predict" element={<Predict />} />
             <Route path="/mammography" element={<MammographyPredict />} />
+            <Route path="/comparison" element={<Comparison />} />
             <Route path="/analysis" element={<Analysis />} />
             <Route path="/metrics" element={<Metrics />} />
             <Route path="/history" element={<History />} />
