@@ -1,10 +1,15 @@
 import { useState, useCallback } from "react";
+import { Image as ImageIcon, Eye, PenTool } from "lucide-react";
 import { predictMammography } from "../services/api";
 import type { MammographyPredictionResponse } from "../services/api";
 import { generatePDFReport } from "../utils/pdfReport";
+import { useToast } from "../components/Toast";
+import ImageViewer from "../components/ImageViewer";
+import AnnotationCanvas from "../components/AnnotationCanvas";
 import "./MammographyPredict.css";
 
 function MammographyPredict() {
+    const { showToast } = useToast();
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [prediction, setPrediction] =
@@ -12,6 +17,7 @@ function MammographyPredict() {
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState<boolean>(false);
+    const [viewMode, setViewMode] = useState<'simple' | 'zoom' | 'annotate'>('simple');
 
     const handleFileSelect = useCallback(
         (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,10 +67,20 @@ function MammographyPredict() {
         try {
             const result = await predictMammography(selectedFile, false);
             setPrediction(result);
+
+            // Show success toast with prediction result
+            const predictionResult = result.prediction;
+            const confidence = result.confidence.toFixed(1);
+            const birads = result.birads_category;
+            showToast(
+                `Analysis Complete: ${predictionResult} - ${birads} (${confidence}% confidence)`,
+                predictionResult === 'Malignant' ? 'warning' : predictionResult === 'Suspicious' ? 'warning' : 'success'
+            );
         } catch (err: unknown) {
             const errorMessage =
                 err instanceof Error ? err.message : "Prediction failed";
             setError(errorMessage);
+            showToast(errorMessage, 'error');
         } finally {
             setLoading(false);
         }
@@ -147,11 +163,6 @@ function MammographyPredict() {
                         >
                             {previewUrl ? (
                                 <div className="preview-container">
-                                    <img
-                                        src={previewUrl}
-                                        alt="Preview"
-                                        className="image-preview"
-                                    />
                                     <button className="clear-btn" onClick={clearResults}>
                                         ✕
                                     </button>
@@ -173,6 +184,52 @@ function MammographyPredict() {
                                 </div>
                             )}
                         </div>
+
+                        {/* View Mode Toggle - Only show when image is loaded */}
+                        {previewUrl && (
+                            <>
+                                <div className="view-mode-toggle">
+                                    <button
+                                        className={`view-mode-btn ${viewMode === 'simple' ? 'active' : ''}`}
+                                        onClick={() => setViewMode('simple')}
+                                    >
+                                        <ImageIcon size={16} />
+                                        Simple
+                                    </button>
+                                    <button
+                                        className={`view-mode-btn ${viewMode === 'zoom' ? 'active zoom' : ''}`}
+                                        onClick={() => setViewMode('zoom')}
+                                    >
+                                        <Eye size={16} />
+                                        Zoom/Pan
+                                    </button>
+                                    <button
+                                        className={`view-mode-btn ${viewMode === 'annotate' ? 'active annotate' : ''}`}
+                                        onClick={() => setViewMode('annotate')}
+                                    >
+                                        <PenTool size={16} />
+                                        Annotate
+                                    </button>
+                                </div>
+
+                                {/* Image Display based on View Mode */}
+                                <div className="image-viewer-wrapper">
+                                    {viewMode === 'simple' && (
+                                        <img
+                                            src={previewUrl}
+                                            alt="Preview"
+                                            className="image-preview"
+                                        />
+                                    )}
+                                    {viewMode === 'zoom' && (
+                                        <ImageViewer src={previewUrl} alt="Mammography Preview" />
+                                    )}
+                                    {viewMode === 'annotate' && (
+                                        <AnnotationCanvas imageSrc={previewUrl} />
+                                    )}
+                                </div>
+                            </>
+                        )}
 
                         {selectedFile && (
                             <div className="file-info">

@@ -1,0 +1,21 @@
+# DeepBreast AI - Docker Compose GPU Override
+# Use with: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
+
+version: '3.8'
+
+services:
+  backend:
+    # Override backend to use GPU
+    build:
+      context: .
+      dockerfile: Dockerfile.backend.gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - CUDA_VISIBLE_DEVICES=0

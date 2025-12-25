@@ -1,0 +1,68 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/
+
+# Data (keep structure but not content)
+data/raw/
+data/processed/
+data/mammography/jpeg/
+data/mammography/csv/
+data/mammography/processed/
+data/mammography/processed_clean/
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Frontend (built separately)
+deepbreastai/
+
+# Docs
+docs/
+*.md
+!README.md
+
+# Reports
+reports/
+
+# Temporary
+*.tmp
+*.temp
+.cache/

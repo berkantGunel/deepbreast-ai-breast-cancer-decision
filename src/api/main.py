@@ -2,15 +2,30 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from src.api.endpoints import predict, gradcam, metrics, report, dicom, history, mammography
+from contextlib import asynccontextmanager
+from src.api.endpoints import predict, gradcam, metrics, report, dicom, history, mammography, auth, patients
+from src.api.database import init_db
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Application lifespan - startup and shutdown events."""
+    # Startup: Initialize database
+    init_db()
+    print("✅ Database initialized")
+    yield
+    # Shutdown: cleanup if needed
+    print("👋 Application shutting down")
+
 
 # Initialize FastAPI app
 app = FastAPI(
     title="DeepBreast API",
-    description="AI-Based Breast Cancer Detection API with Uncertainty Estimation, PDF Reports, DICOM Support, and Analysis History",
-    version="2.3.0",
+    description="AI-Based Breast Cancer Detection API with Uncertainty Estimation, PDF Reports, DICOM Support, User Authentication, and Patient Management",
+    version="3.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # CORS middleware - allows frontend to communicate with backend
@@ -23,6 +38,8 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api", tags=["Authentication"])
+app.include_router(patients.router, prefix="/api", tags=["Patients & Analyses"])
 app.include_router(predict.router, prefix="/api", tags=["Prediction"])
 app.include_router(gradcam.router, prefix="/api", tags=["Grad-CAM"])
 app.include_router(metrics.router, prefix="/api", tags=["Metrics"])
@@ -36,8 +53,10 @@ async def root():
     """Root endpoint - API health check."""
     return {
         "message": "DeepBreast API is running",
-        "version": "2.3.0",
+        "version": "3.1.0",
         "features": [
+            "User Authentication (JWT)",
+            "Patient Management",
             "Cancer Detection (Histopathology)",
             "Mammography Analysis (BI-RADS)",
             "MC Dropout Uncertainty",
@@ -55,4 +74,7 @@ async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
 
-
+@app.get("/api/health")
+async def api_health():
+    """API Health check endpoint for Dashboard."""
+    return {"status": "healthy"}

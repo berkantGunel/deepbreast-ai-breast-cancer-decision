@@ -9,8 +9,15 @@ import {
     Clock,
     Brain,
     ScanLine,
-    RefreshCw
+    RefreshCw,
+    Download,
+    FileSpreadsheet,
+    FileText,
+    ChevronDown
 } from "lucide-react";
+import { useToast } from "../components/Toast";
+import { exportToCSV, exportToExcel, exportSummaryReport } from "../utils/exportData";
+import { getHistoryStats, getHistory } from "../services/api";
 
 interface AnalysisRecord {
     id: string;
@@ -33,6 +40,7 @@ interface DashboardStats {
 }
 
 const Dashboard = () => {
+    const { showToast } = useToast();
     const [stats, setStats] = useState<DashboardStats>({
         totalAnalyses: 0,
         histopathologyCount: 0,
@@ -47,62 +55,132 @@ const Dashboard = () => {
     const [recentAnalyses, setRecentAnalyses] = useState<AnalysisRecord[]>([]);
     const [apiStatus, setApiStatus] = useState<"online" | "offline" | "checking">("checking");
     const [isRefreshing, setIsRefreshing] = useState(false);
+    const [exportDropdownOpen, setExportDropdownOpen] = useState(false);
 
-    // Load stats from localStorage
-    const loadStats = () => {
+    // Export handlers - now using backend API
+    const handleExportCSV = async () => {
         try {
-            const historyStr = localStorage.getItem("analysisHistory");
-            if (!historyStr) {
-                setRecentAnalyses([]);
+            // Fetch all history from backend (limit high to get all)
+            const response = await getHistory({ limit: 200 });
+            const data: AnalysisRecord[] = response.records.map(record => ({
+                id: record.id.toString(),
+                type: "histopathology" as const,
+                prediction: record.prediction,
+                confidence: record.confidence,
+                timestamp: record.created_at
+            }));
+
+            if (data.length === 0) {
+                showToast('No analysis data to export', 'warning');
                 return;
             }
+            exportToCSV(data, 'deepbreast_analysis');
+            showToast('CSV file downloaded successfully!', 'success');
+            setExportDropdownOpen(false);
+        } catch (error) {
+            console.error('CSV export error:', error);
+            showToast('Failed to export CSV file', 'error');
+        }
+    };
 
-            const history: AnalysisRecord[] = JSON.parse(historyStr);
-            setRecentAnalyses(history.slice(0, 10)); // Last 10 analyses
+    const handleExportExcel = async () => {
+        try {
+            // Fetch all history from backend
+            const response = await getHistory({ limit: 200 });
+            const data: AnalysisRecord[] = response.records.map(record => ({
+                id: record.id.toString(),
+                type: "histopathology" as const,
+                prediction: record.prediction,
+                confidence: record.confidence,
+                timestamp: record.created_at
+            }));
 
-            // Calculate stats
+            if (data.length === 0) {
+                showToast('No analysis data to export', 'warning');
+                return;
+            }
+            exportToExcel(data, 'deepbreast_analysis');
+            showToast('Excel file downloaded successfully!', 'success');
+            setExportDropdownOpen(false);
+        } catch (error) {
+            console.error('Excel export error:', error);
+            showToast('Failed to export Excel file', 'error');
+        }
+    };
+
+    const handleExportSummary = async () => {
+        try {
+            // Fetch all history from backend
+            const response = await getHistory({ limit: 200 });
+            const data: AnalysisRecord[] = response.records.map(record => ({
+                id: record.id.toString(),
+                type: "histopathology" as const,
+                prediction: record.prediction,
+                confidence: record.confidence,
+                timestamp: record.created_at
+            }));
+
+            if (data.length === 0) {
+                showToast('No analysis data to export', 'warning');
+                return;
+            }
+            exportSummaryReport(data);
+            showToast('Summary report downloaded!', 'success');
+            setExportDropdownOpen(false);
+        } catch (error) {
+            console.error('Summary export error:', error);
+            showToast('Failed to export summary report', 'error');
+        }
+    };
+
+    // Load stats from backend API
+    const loadStats = async () => {
+        try {
+            // Load statistics from backend
+            const statsResponse = await getHistoryStats();
+            const apiStats = statsResponse.statistics;
+
+            // Load recent history for the list
+            const historyResponse = await getHistory({ limit: 10 });
+
+            // Convert API records to dashboard format
+            const recentRecords: AnalysisRecord[] = historyResponse.records.map(record => ({
+                id: record.id.toString(),
+                type: "histopathology" as const, // Histopathology records from API
+                prediction: record.prediction,
+                confidence: record.confidence,
+                timestamp: record.created_at
+            }));
+
+            setRecentAnalyses(recentRecords);
+
+            // Calculate time-based counts from daily_counts
             const now = new Date();
-            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-            const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const today = now.toISOString().split('T')[0];
+            const todayCount = apiStats.daily_counts?.[today] || 0;
 
-            let benign = 0, malignant = 0, suspicious = 0;
-            let histo = 0, mammo = 0;
-            let totalConf = 0;
-            let todayCount = 0, weekCount = 0;
-
-            history.forEach((record) => {
-                // Count by type
-                if (record.type === "histopathology") histo++;
-                else mammo++;
-
-                // Count by prediction
-                const pred = record.prediction.toLowerCase();
-                if (pred.includes("benign")) benign++;
-                else if (pred.includes("malignant")) malignant++;
-                else if (pred.includes("suspicious")) suspicious++;
-
-                // Average confidence
-                totalConf += record.confidence;
-
-                // Time-based counts
-                const recordDate = new Date(record.timestamp);
-                if (recordDate >= today) todayCount++;
-                if (recordDate >= weekAgo) weekCount++;
-            });
+            // Sum last 7 days
+            let weekCount = 0;
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                const dateStr = date.toISOString().split('T')[0];
+                weekCount += apiStats.daily_counts?.[dateStr] || 0;
+            }
 
             setStats({
-                totalAnalyses: history.length,
-                histopathologyCount: histo,
-                mammographyCount: mammo,
-                benignCount: benign,
-                malignantCount: malignant,
-                suspiciousCount: suspicious,
-                avgConfidence: history.length > 0 ? totalConf / history.length : 0,
+                totalAnalyses: apiStats.total_analyses,
+                histopathologyCount: apiStats.total_analyses, // All are histopathology from this API
+                mammographyCount: 0, // Mammography history not yet implemented
+                benignCount: apiStats.by_prediction?.Benign || 0,
+                malignantCount: apiStats.by_prediction?.Malignant || 0,
+                suspiciousCount: apiStats.by_prediction?.Suspicious || 0,
+                avgConfidence: apiStats.average_confidence || 0,
                 todayCount,
                 weekCount,
             });
-        } catch {
-            console.error("Error loading stats");
+        } catch (error) {
+            console.error("Error loading stats from API:", error);
+            // Fallback: keep current stats or show zeros
         }
     };
 
@@ -169,14 +247,131 @@ const Dashboard = () => {
                         </h1>
                         <p className="subtitle">System overview and analysis statistics</p>
                     </div>
-                    <button
-                        onClick={handleRefresh}
-                        className="sharp-btn-secondary"
-                        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-                    >
-                        <RefreshCw style={{ width: "18px", height: "18px", animation: isRefreshing ? "spin 1s linear infinite" : "none" }} />
-                        Refresh
-                    </button>
+                    <div style={{ display: "flex", gap: "0.75rem", alignItems: "center" }}>
+                        {/* Export Dropdown */}
+                        <div style={{ position: "relative" }}>
+                            <button
+                                onClick={() => setExportDropdownOpen(!exportDropdownOpen)}
+                                className="sharp-btn-secondary"
+                                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                            >
+                                <Download style={{ width: "18px", height: "18px" }} />
+                                Export
+                                <ChevronDown style={{
+                                    width: "16px",
+                                    height: "16px",
+                                    transition: "transform 0.2s",
+                                    transform: exportDropdownOpen ? "rotate(180deg)" : "rotate(0deg)"
+                                }} />
+                            </button>
+                            {exportDropdownOpen && (
+                                <>
+                                    {/* Backdrop to close dropdown */}
+                                    <div
+                                        style={{
+                                            position: "fixed",
+                                            top: 0,
+                                            left: 0,
+                                            right: 0,
+                                            bottom: 0,
+                                            zIndex: 49
+                                        }}
+                                        onClick={() => setExportDropdownOpen(false)}
+                                    />
+                                    <div style={{
+                                        position: "absolute",
+                                        top: "calc(100% + 8px)",
+                                        right: 0,
+                                        background: "rgba(30, 41, 59, 0.98)",
+                                        backdropFilter: "blur(12px)",
+                                        border: "1px solid rgba(255, 255, 255, 0.1)",
+                                        borderRadius: "12px",
+                                        padding: "0.5rem",
+                                        minWidth: "200px",
+                                        zIndex: 50,
+                                        boxShadow: "0 10px 40px rgba(0, 0, 0, 0.4)",
+                                        animation: "fadeIn 0.2s ease"
+                                    }}>
+                                        <button
+                                            onClick={handleExportCSV}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "0.75rem",
+                                                width: "100%",
+                                                padding: "0.75rem 1rem",
+                                                background: "transparent",
+                                                border: "none",
+                                                borderRadius: "8px",
+                                                color: "#f1f5f9",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                transition: "background 0.2s"
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = "rgba(139, 92, 246, 0.15)"}
+                                            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                                        >
+                                            <FileText style={{ width: "18px", height: "18px", color: "#22c55e" }} />
+                                            Export as CSV
+                                        </button>
+                                        <button
+                                            onClick={handleExportExcel}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "0.75rem",
+                                                width: "100%",
+                                                padding: "0.75rem 1rem",
+                                                background: "transparent",
+                                                border: "none",
+                                                borderRadius: "8px",
+                                                color: "#f1f5f9",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                transition: "background 0.2s"
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = "rgba(139, 92, 246, 0.15)"}
+                                            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                                        >
+                                            <FileSpreadsheet style={{ width: "18px", height: "18px", color: "#06b6d4" }} />
+                                            Export as Excel
+                                        </button>
+                                        <div style={{ height: "1px", background: "rgba(255,255,255,0.1)", margin: "0.5rem 0" }} />
+                                        <button
+                                            onClick={handleExportSummary}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "0.75rem",
+                                                width: "100%",
+                                                padding: "0.75rem 1rem",
+                                                background: "transparent",
+                                                border: "none",
+                                                borderRadius: "8px",
+                                                color: "#f1f5f9",
+                                                fontSize: "0.9rem",
+                                                cursor: "pointer",
+                                                transition: "background 0.2s"
+                                            }}
+                                            onMouseOver={(e) => e.currentTarget.style.background = "rgba(139, 92, 246, 0.15)"}
+                                            onMouseOut={(e) => e.currentTarget.style.background = "transparent"}
+                                        >
+                                            <BarChart3 style={{ width: "18px", height: "18px", color: "#f59e0b" }} />
+                                            Summary Report
+                                        </button>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                        <button
+                            onClick={handleRefresh}
+                            className="sharp-btn-secondary"
+                            style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                        >
+                            <RefreshCw style={{ width: "18px", height: "18px", animation: isRefreshing ? "spin 1s linear infinite" : "none" }} />
+                            Refresh
+                        </button>
+                    </div>
                 </div>
 
                 {/* System Status */}

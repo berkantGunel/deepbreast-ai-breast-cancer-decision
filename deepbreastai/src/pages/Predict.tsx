@@ -6,16 +6,18 @@ import {
   AlertCircle,
   CheckCircle,
   TrendingUp,
-  Sparkles,
   XCircle,
   Shield,
   AlertTriangle,
-  Info,
   Activity,
-  FileText,
   Download,
   FileImage,
+  Eye,
+  PenTool,
+  Image as ImageIcon,
 } from "lucide-react";
+import ImageViewer from "../components/ImageViewer";
+import AnnotationCanvas from "../components/AnnotationCanvas";
 import {
   predictImage,
   downloadReport,
@@ -26,8 +28,10 @@ import {
   type PredictionResponse,
   type DicomPredictionResponse
 } from "../services/api";
+import { useToast } from "../components/Toast";
 
 const Predict = () => {
+  const { showToast } = useToast();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -39,6 +43,7 @@ const Predict = () => {
   const [isDicom, setIsDicom] = useState(false);
   const [dicomMetadata, setDicomMetadata] = useState<Record<string, unknown> | null>(null);
   const [savedToHistory, setSavedToHistory] = useState(false);
+  const [viewMode, setViewMode] = useState<'simple' | 'zoom' | 'annotate'>('simple');
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,6 +96,14 @@ const Predict = () => {
 
       setResult(response);
 
+      // Show success toast with prediction result
+      const predictionResult = response.prediction;
+      const confidence = response.confidence;
+      showToast(
+        `Analysis Complete: ${predictionResult} (${confidence}% confidence)`,
+        predictionResult === 'Malignant' ? 'warning' : 'success'
+      );
+
       try {
         await saveAnalysisToHistory(selectedFile, {
           prediction: response.prediction,
@@ -109,9 +122,9 @@ const Predict = () => {
 
     } catch (err: unknown) {
       const error = err as { response?: { data?: { detail?: string } } };
-      setError(
-        error.response?.data?.detail || "Prediction failed. Please try again."
-      );
+      const errorMessage = error.response?.data?.detail || "Prediction failed. Please try again.";
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -241,7 +254,89 @@ const Predict = () => {
                   <XCircle style={{ width: "20px", height: "20px", color: "#94a3b8" }} />
                 </button>
               </div>
-              <img src={preview} alt="Preview" style={{ width: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }} />
+
+              {/* View Mode Toggle */}
+              <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+                <button
+                  onClick={() => setViewMode('simple')}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    padding: "0.625rem 0.75rem",
+                    background: viewMode === 'simple' ? "linear-gradient(135deg, #8b5cf6, #6366f1)" : "rgba(30, 41, 59, 0.6)",
+                    border: viewMode === 'simple' ? "1px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "10px",
+                    color: viewMode === 'simple' ? "white" : "#94a3b8",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <ImageIcon style={{ width: "16px", height: "16px" }} />
+                  Simple
+                </button>
+                <button
+                  onClick={() => setViewMode('zoom')}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    padding: "0.625rem 0.75rem",
+                    background: viewMode === 'zoom' ? "linear-gradient(135deg, #06b6d4, #0891b2)" : "rgba(30, 41, 59, 0.6)",
+                    border: viewMode === 'zoom' ? "1px solid #06b6d4" : "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "10px",
+                    color: viewMode === 'zoom' ? "white" : "#94a3b8",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <Eye style={{ width: "16px", height: "16px" }} />
+                  Zoom/Pan
+                </button>
+                <button
+                  onClick={() => setViewMode('annotate')}
+                  style={{
+                    flex: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.5rem",
+                    padding: "0.625rem 0.75rem",
+                    background: viewMode === 'annotate' ? "linear-gradient(135deg, #10b981, #059669)" : "rgba(30, 41, 59, 0.6)",
+                    border: viewMode === 'annotate' ? "1px solid #10b981" : "1px solid rgba(255, 255, 255, 0.1)",
+                    borderRadius: "10px",
+                    color: viewMode === 'annotate' ? "white" : "#94a3b8",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <PenTool style={{ width: "16px", height: "16px" }} />
+                  Annotate
+                </button>
+              </div>
+
+              {/* Image Display based on View Mode */}
+              {viewMode === 'simple' && (
+                <img src={preview} alt="Preview" style={{ width: "100%", borderRadius: "12px", border: "1px solid rgba(255,255,255,0.1)" }} />
+              )}
+
+              {viewMode === 'zoom' && (
+                <ImageViewer src={preview} alt="Medical Image Preview" />
+              )}
+
+              {viewMode === 'annotate' && (
+                <AnnotationCanvas imageSrc={preview} />
+              )}
 
               {isDicom && dicomMetadata && (
                 <div style={{ marginTop: "1rem", padding: "1rem", background: "rgba(245, 158, 11, 0.1)", borderRadius: "10px", border: "1px solid rgba(245, 158, 11, 0.2)" }}>

@@ -7,5 +7,6 @@ export default defineConfig({
   server: {
     host: true, // Listen on all network interfaces
     port: 5173,
+    // HTTPS disabled for local development - no certificate warnings
   },
 });

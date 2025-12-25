@@ -1,6 +1,21 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000/api";
+// Dinamik API URL - Docker ve development için
+const getApiBaseUrl = () => {
+  const hostname = window.location.hostname;
+  const port = window.location.port;
+
+  // Production (Docker) - nginx proxy handles /api
+  // port 80 veya port yok demek production demek
+  if (!port || port === "80" || port === "443") {
+    return "/api";
+  }
+
+  // Development - doğrudan backend'e bağlan
+  return `http://${hostname}:8000/api`;
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,

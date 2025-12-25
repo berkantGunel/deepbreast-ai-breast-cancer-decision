@@ -1,4 +1,4 @@
-import { Brain, Upload, BarChart3, Eye, ArrowRight, Zap, Shield, Sparkles, ScanLine } from "lucide-react";
+import { Brain, BarChart3, Eye, ArrowRight, Zap, Shield, ScanLine } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Home = () => {
@@ -124,12 +124,12 @@ const Home = () => {
                 </div>
                 <div style={{ display: "flex", gap: "1rem", marginBottom: "1rem" }}>
                   <div style={{ flex: 1, padding: "0.75rem", background: "rgba(139, 92, 246, 0.1)", borderRadius: "8px", textAlign: "center" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#8b5cf6" }}>67.5%</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#8b5cf6" }}>68.1%</div>
                     <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Accuracy</div>
                   </div>
                   <div style={{ flex: 1, padding: "0.75rem", background: "rgba(236, 72, 153, 0.1)", borderRadius: "8px", textAlign: "center" }}>
-                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ec4899" }}>3</div>
-                    <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Classes</div>
+                    <div style={{ fontSize: "1.5rem", fontWeight: 700, color: "#ec4899" }}>2.1K</div>
+                    <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>Images</div>
                   </div>
                 </div>
                 <Link to="/mammography" className="sharp-btn-primary" style={{ width: "100%", background: "linear-gradient(135deg, #8b5cf6, #ec4899)" }}>
@@ -147,7 +147,7 @@ const Home = () => {
       <section className="sharp-section">
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1rem" }} className="stats-grid">
           {[
-            { label: "Total Images", value: "277K+", color: "#06b6d4" },
+            { label: "Total Images", value: "279K+", color: "#06b6d4" },
             { label: "Models", value: "2", color: "#8b5cf6" },
             { label: "GPU Inference", value: "<2s", color: "#f59e0b" },
             { label: "Classes", value: "5", color: "#22c55e" },

@@ -1,0 +1,59 @@
+# DeepBreast AI - Docker Compose Configuration
+# Run with: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # Backend - FastAPI with PyTorch
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: deepbreast-backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist analysis history
+      - ./data/history:/app/data/history
+      - ./data/thumbnails:/app/data/thumbnails
+      # Mount models (read-only)
+      - ./models:/app/models:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MODEL_PATH=/app/models
+    healthcheck:
+      test: [ "CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - deepbreast-network
+
+  # Frontend - React/Vite with Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: deepbreast-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:80/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - deepbreast-network
+
+networks:
+  deepbreast-network:
+    driver: bridge
+
+# Optional: GPU support (uncomment if using NVIDIA GPU)
+# To use GPU, run: docker-compose -f docker-compose.yml -f docker-compose.gpu.yml up -d
