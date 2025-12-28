@@ -62,18 +62,22 @@ def load_model():
         base_features=32
     )
     
-    # Load weights if available
-    if model_path.exists():
-        try:
-            checkpoint = torch.load(model_path, map_location=_device, weights_only=False)
-            _model.load_state_dict(checkpoint['model_state_dict'])
-            print(f"✓ Loaded segmentation model from {model_path}")
-        except Exception as e:
-            print(f"⚠ Error loading model: {e}")
-            print("  Using randomly initialized weights")
-    else:
-        print(f"⚠ No trained model found at {model_path}")
-        print("  Using randomly initialized weights (for demo purposes)")
+    # Load weights - CRITICAL FIX: Fail if model not found instead of using random weights
+    if not model_path.exists():
+        print(f"❌ CRITICAL ERROR: Transformation model not found at {model_path}")
+        # Check current directory to debug path issues
+        print(f"   Current working directory: {Path.cwd()}")
+        print(f"   Contents of models folder: {list(model_path.parent.glob('*')) if model_path.parent.exists() else 'Parent folder not found'}")
+        raise RuntimeError(f"Model file not found: {model_path}. Please ensure 'models/segmentation/best_model.pth' exists and is not a Git LFS pointer.")
+
+    try:
+        # Force map_location to cpu for Docker compatibility
+        checkpoint = torch.load(model_path, map_location=torch.device('cpu'), weights_only=False)
+        _model.load_state_dict(checkpoint['model_state_dict'])
+        print(f"✓ Loaded segmentation model from {model_path}")
+    except Exception as e:
+        print(f"⚠ Error loading model weights: {e}")
+        raise RuntimeError(f"Failed to load model weights: {e}")
     
     _model = _model.to(_device)
     _model.eval()
@@ -98,19 +102,14 @@ def preprocess_image(image: np.ndarray, target_size: int = 256) -> torch.Tensor:
     # Resize
     image = cv2.resize(image, (target_size, target_size), interpolation=cv2.INTER_LINEAR)
     
-    # Normalize
-    # Normalize
+    # Normalize (0-1)
     image = image.astype(np.float32)
     if image.max() > 1.0:
         image = image / 255.0
-    
-    # Ensure background is truly 0 (simple thresholding to remove low-level noise)
-    # This helps prevents the model from segmenting the background noise
-    image[image < 0.05] = 0
-    
-    # Standardize - Using simple 0-1 range is often more robust across different environments
-    # than (x-0.5)/0.5 which can cause issues if distribution isn't perfectly centered
-    # image = (image - 0.5) / 0.5  # Comments out aggressive standardization
+
+    # Revert to proven normalization (Windows compatible)
+    # The 'green screen' issue was likely due to model not loading, not this math.
+    image = (image - 0.5) / 0.5
     
     # Convert to tensor
     tensor = torch.from_numpy(image).float().unsqueeze(0).unsqueeze(0)
