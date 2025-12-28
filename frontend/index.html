@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+
+  <!-- Primary Meta Tags -->
+  <title>DeepBreast AI - AI-Powered Breast Cancer Detection</title>
+  <meta name="title" content="DeepBreast AI - AI-Powered Breast Cancer Detection" />
+  <meta name="description"
+    content="Advanced AI system for breast cancer detection using histopathology and mammography image analysis. Powered by deep learning." />
+  <meta name="keywords"
+    content="breast cancer, AI, deep learning, mammography, histopathology, medical imaging, diagnosis" />
+  <meta name="author" content="DeepBreast AI Team" />
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- PWA Meta Tags -->
+  <meta name="theme-color" content="#4F46E5" />
+  <meta name="background-color" content="#0F172A" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DeepBreast AI" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="application-name" content="DeepBreast AI" />
+  <meta name="msapplication-TileColor" content="#4F46E5" />
+  <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://deepbreast.ai/" />
+  <meta property="og:title" content="DeepBreast AI - AI-Powered Breast Cancer Detection" />
+  <meta property="og:description"
+    content="Advanced AI system for breast cancer detection using histopathology and mammography image analysis." />
+  <meta property="og:image" content="/icons/icon-512x512.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://deepbreast.ai/" />
+  <meta property="twitter:title" content="DeepBreast AI - AI-Powered Breast Cancer Detection" />
+  <meta property="twitter:description"
+    content="Advanced AI system for breast cancer detection using histopathology and mammography image analysis." />
+  <meta property="twitter:image" content="/icons/icon-512x512.png" />
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', async () => {
+        try {
+          const registration = await navigator.serviceWorker.register('/sw.js', {
+            scope: '/'
+          });
+          console.log('SW registered:', registration.scope);
+
+          // Check for updates
+          registration.addEventListener('updatefound', () => {
+            const newWorker = registration.installing;
+            newWorker.addEventListener('statechange', () => {
+              if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                // New content available, show update notification
+                console.log('New version available! Refresh to update.');
+              }
+            });
+          });
+        } catch (error) {
+          console.error('SW registration failed:', error);
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

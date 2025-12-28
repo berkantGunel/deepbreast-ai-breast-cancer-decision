@@ -35,8 +35,18 @@ data/mammography/**/*
 !data/mammography/**/
 !data/mammography/**/.gitkeep
 
+# Histopathology dataset images
+data/histopathology/**/*
+!data/histopathology/
+!data/histopathology/**/
+!data/histopathology/**/.gitkeep
+
 # Keep test samples (small files for testing)
 !data/test_samples/
+
+# Database files
+*.db
+*.sqlite3
 
 # ------------------------
 # Model files (large .pth files)
@@ -64,3 +74,12 @@ dist/
 *.env
 Thumbs.db
 desktop.ini
+
+# ------------------------
+# Test & Temp files
+# ------------------------
+temp_*.png
+test_*.png
+*.tmp
+test_samples/
+

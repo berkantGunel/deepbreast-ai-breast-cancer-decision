@@ -1,6 +1,6 @@
 # 🚀 DeepBreast AI - Future Works & Roadmap
 
-📅 **Son Güncelleme:** 25 Aralık 2024
+📅 **Son Güncelleme:** 28 Aralık 2024
 
 ---
 
@@ -31,10 +31,10 @@
 | 🐳 Docker Deployment | Tek komutla kurulum | ✅ Tamamlandı |
 
 ### 🧠 Öncelik 4: AI Geliştirmeleri (Uzun vadeli)
-
+<>
 | Özellik | Açıklama | Durum |
 |---------|----------|-------|
-| 🔬 Tümör Segmentasyonu | U-Net ile bölge tespiti | ⏳ Bekliyor |
+| 🔬 Tümör Segmentasyonu | U-Net ile bölge tespiti | ✅ Tamamlandı |
 | 📈 Mammography Accuracy | Daha fazla veri ile %80+ accuracy | ⏳ Bekliyor |
 | ⏱️ Temporal Analysis | Aynı hastanın farklı dönem görüntülerini karşılaştırma | ⏳ Bekliyor |
 | 🔗 Multi-Modal Fusion | Mamografi + Histopatoloji birlikte değerlendirme | ⏳ Bekliyor |
@@ -70,6 +70,18 @@
 ---
 
 ## ✅ Tamamlanan Özellikler
+
+### 📅 28 Aralık 2024
+- [x] **Segmentation Mask Threshold Düzeltmesi** - Eğitim dataset'inde mask yükleme threshold'u `mask > 0` → `mask > 200` olarak düzeltildi
+  - **Sorun:** Tüm meme dokusu (%30-40) tümör olarak işaretleniyordu
+  - **Çözüm:** Gerçek tümör bölgeleri (~%0.1-1) artık doğru tespit ediliyor
+- [x] **Segmentation Model Yeniden Eğitimi** - Düzeltilmiş mask verileriyle model yeniden eğitildi
+  - Epoch 8'de en iyi sonuç: Val Dice 0.3602, Val IoU 0.2214
+  - 1800x iyileşme (0.0002 → 0.3602)
+- [x] **Heatmap Görselleştirme Düzeltmesi** - Overlay oluşturma fonksiyonu güncellendi
+  - **Sorun:** `refine_segmentation_mask` çok agresif filtreleme yapıyordu, heatmap görünmüyordu
+  - **Çözüm:** Heatmap için `prob_mask > 0.3` threshold kullanılıyor, refined mask sadece kontür/metrikler için
+  - Renkli piksel oranı: %0.01 → %0.65 (artık görünür!)
 
 ### 📅 25 Aralık 2024
 - [x] **Kullanıcı Sistemi (JWT Auth)** - Login/Register, token yönetimi, oturum kontrolü

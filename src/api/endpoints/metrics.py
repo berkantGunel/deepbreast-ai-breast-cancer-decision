@@ -101,31 +101,42 @@ async def get_training_history():
 @router.get("/mammography/metrics")
 async def get_mammography_metrics():
     """
-    Get mammography model evaluation metrics.
-    
-    Returns:
-        JSON with accuracy, class-wise accuracy for 3 classes
+    Get mammography model evaluation metrics (Classical ML).
     """
     try:
-        eval_path = "models/mammography_eval_results.json"
+        eval_path = "models/mammography_classical/pathology_metrics.json"
         if not os.path.exists(eval_path):
+            # Fallback to old format or empty
             raise HTTPException(
                 status_code=404,
-                detail="Mammography evaluation results not found"
+                detail="Mammography metrics not found"
             )
         
         with open(eval_path, "r") as f:
             eval_results = json.load(f)
+            
+        # Extract class accuracies from qualification report (using recall as per-class accuracy)
+        report = eval_results.get("classification_report", {})
+        
+        # Map B, M, N to full names
+        # B: Benign, M: Malignant, N: Normal
+        class_acc = {
+            "benign": report.get("B", {}).get("recall", 0) * 100,
+            "malignant": report.get("M", {}).get("recall", 0) * 100,
+            "normal": report.get("N", {}).get("recall", 0) * 100
+        }
         
         return {
             "success": True,
-            "model": eval_results.get("model", "EfficientNet-B2"),
-            "accuracy": eval_results.get("test_accuracy", 0),
-            "test_loss": eval_results.get("test_loss", 0),
-            "class_accuracy": eval_results.get("test_class_accuracy", {}),
-            "best_val_accuracy": eval_results.get("best_val_accuracy", 0),
-            "timestamp": eval_results.get("timestamp", ""),
-            "classes": ["Benign", "Suspicious", "Malignant"]
+            "model": "Ensemble Classical ML",
+            "accuracy": eval_results.get("accuracy", 0) * 100,
+            "precision": eval_results.get("precision", 0) * 100,
+            "recall": eval_results.get("recall", 0) * 100,
+            "f1_score": eval_results.get("f1", 0) * 100,
+            "roc_auc": eval_results.get("roc_auc", 0),
+            "class_accuracy": class_acc,
+            "confusion_matrix": eval_results.get("confusion_matrix", []),
+            "classes": ["Benign", "Malignant", "Normal"]
         }
         
     except Exception as e:

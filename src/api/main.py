@@ -3,7 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from src.api.endpoints import predict, gradcam, metrics, report, dicom, history, mammography, auth, patients
+from src.api.endpoints import predict, gradcam, metrics, report, dicom, history, auth, patients, mammography_classical, mammography, segmentation
 from src.api.database import init_db
 
 
@@ -46,7 +46,9 @@ app.include_router(metrics.router, prefix="/api", tags=["Metrics"])
 app.include_router(report.router, prefix="/api", tags=["Reports"])
 app.include_router(dicom.router, prefix="/api", tags=["DICOM"])
 app.include_router(history.router, prefix="/api", tags=["History & Batch"])
+app.include_router(mammography_classical.router, prefix="/api", tags=["Mammography Classical"])
 app.include_router(mammography.router, prefix="/api", tags=["Mammography"])
+app.include_router(segmentation.router, tags=["Tumor Segmentation"])
 
 @app.get("/")
 async def root():
@@ -58,13 +60,14 @@ async def root():
             "User Authentication (JWT)",
             "Patient Management",
             "Cancer Detection (Histopathology)",
-            "Mammography Analysis (BI-RADS)",
+            "Mammography Analysis (Classical ML - DMID)",
             "MC Dropout Uncertainty",
             "Grad-CAM Visualization",
             "PDF Reports",
             "DICOM Support",
             "Analysis History",
-            "Batch Upload"
+            "Batch Upload",
+            "Tumor Segmentation (U-Net)"
         ],
         "docs": "/docs"
     }

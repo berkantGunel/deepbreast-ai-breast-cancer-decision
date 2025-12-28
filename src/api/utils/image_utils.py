@@ -5,6 +5,18 @@ import torch
 from torchvision import transforms
 import numpy as np
 import io
+from pathlib import Path
+import sys
+
+# Add parent path for utils imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+
+# Try to import DICOM utils
+try:
+    from utils.dicom_utils import read_dicom_file, PYDICOM_AVAILABLE
+except ImportError:
+    PYDICOM_AVAILABLE = False
+    read_dicom_file = None
 
 # Preprocessing transform (same as training)
 preprocess = transforms.Compose([
@@ -70,14 +82,41 @@ def preprocess_image(image: Image.Image, device: torch.device) -> torch.Tensor:
     return tensor.to(device)
 
 
-async def read_image_from_bytes(contents: bytes) -> Image.Image:
+def is_dicom_bytes(contents: bytes) -> bool:
+    """Check if byte content appears to be a DICOM file."""
+    # DICOM files have 'DICM' magic word at byte 128
+    if len(contents) > 132:
+        return contents[128:132] == b'DICM'
+    return False
+
+
+async def read_image_from_bytes(contents: bytes, filename: str = "") -> Image.Image:
     """
     Read PIL Image from byte contents.
+    Supports standard image formats and DICOM.
     
     Args:
         contents: Image file bytes
+        filename: Optional filename for format detection
         
     Returns:
         PIL.Image: Loaded image
     """
+    # Check if DICOM file
+    is_dicom = (
+        filename.lower().endswith(('.dcm', '.dicom')) or 
+        is_dicom_bytes(contents)
+    )
+    
+    if is_dicom and PYDICOM_AVAILABLE and read_dicom_file:
+        pixel_array, metadata = read_dicom_file(contents)
+        if pixel_array is not None:
+            # Convert grayscale to RGB
+            if len(pixel_array.shape) == 2:
+                # Stack grayscale to 3 channels
+                pixel_array = np.stack([pixel_array, pixel_array, pixel_array], axis=-1)
+            return Image.fromarray(pixel_array)
+    
+    # Standard image formats
     return Image.open(io.BytesIO(contents))
+

@@ -5,6 +5,8 @@ Mammography prediction endpoint - handles mammogram image upload and BI-RADS cla
     - Benign (BI-RADS 2-3)
     - Suspicious (BI-RADS 4)
     - Malignant (BI-RADS 5)
+    
+Supports: JPEG, PNG, TIFF, DICOM formats
 """
 
 from fastapi import APIRouter, UploadFile, File, HTTPException, Form
@@ -28,6 +30,10 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent.parent))
 from src.core.mammography_model import get_mammography_model
 from src.core.mammography_data_loader import IMAGE_SIZE, IMAGENET_MEAN, IMAGENET_STD
 from torchvision import transforms
+
+# DICOM support
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
+from utils.dicom_utils import is_dicom_file, read_dicom_file, check_dicom_support
 
 router = APIRouter()
 
@@ -179,23 +185,46 @@ async def predict_mammography(
         - Malignant (BI-RADS 5): High suspicion of malignancy
     
     Args:
-        file: Uploaded mammography image (JPEG, PNG)
+        file: Uploaded mammography image (JPEG, PNG, TIFF, DICOM)
         skip_validation: Skip image validation check (for testing)
     
     Returns:
         JSON with prediction, confidence, BI-RADS category, and clinical recommendations
     """
     # Validate file type
-    if not file.content_type.startswith("image/"):
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    
+    valid_content_types = ["image/", "application/octet-stream", "application/dicom"]
+    valid_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".dcm", ".dicom"]
+    
+    is_valid = (
+        any(content_type.startswith(ct) for ct in valid_content_types) or
+        any(filename.lower().endswith(ext) for ext in valid_extensions)
+    )
+    
+    if not is_valid:
         raise HTTPException(
             status_code=400,
-            detail="File must be an image"
+            detail="File must be an image (JPEG, PNG, TIFF, or DICOM)"
         )
     
     try:
         # Read image
         contents = await file.read()
-        image = Image.open(io.BytesIO(contents)).convert("RGB")
+        dicom_metadata = None
+        
+        # Check if DICOM file
+        if is_dicom_file(filename):
+            pixel_array, dicom_metadata = read_dicom_file(contents)
+            if pixel_array is None:
+                raise HTTPException(status_code=400, detail="Could not read DICOM file")
+            # Convert grayscale to RGB for the model
+            if len(pixel_array.shape) == 2:
+                pixel_array = cv2.cvtColor(pixel_array, cv2.COLOR_GRAY2RGB)
+            image = Image.fromarray(pixel_array)
+        else:
+            image = Image.open(io.BytesIO(contents)).convert("RGB")
         
         # Validate mammography image (optional)
         if not skip_validation and not is_mammography_like(image):
@@ -229,7 +258,7 @@ async def predict_mammography(
         birads = BIRADS_MAPPING[class_name]
         recommendation = RECOMMENDATIONS[class_name]
         
-        return {
+        response = {
             "success": True,
             "prediction": class_name,
             "predicted_class": predicted_class,
@@ -247,6 +276,12 @@ async def predict_mammography(
                 "classes": CLASS_NAMES
             }
         }
+        
+        # Add DICOM metadata if available
+        if dicom_metadata:
+            response["dicom_metadata"] = dicom_metadata
+        
+        return response
         
     except Exception as e:
         raise HTTPException(
@@ -415,8 +450,23 @@ async def generate_mammography_gradcam(
     Returns:
         PNG image with heatmap overlay
     """
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    # Validate file type - allow TIFF and octet-stream
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    
+    valid_content_types = ["image/", "application/octet-stream"]
+    valid_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+    
+    is_valid = (
+        any(content_type.startswith(ct) for ct in valid_content_types) or
+        any(filename.lower().endswith(ext) for ext in valid_extensions)
+    )
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File must be an image (JPEG, PNG, or TIFF). Got: {content_type}"
+        )
     
     valid_methods = ["gradcam", "gradcam++"]
     if method not in valid_methods:
@@ -471,8 +521,23 @@ async def compare_mammography_gradcam(file: UploadFile = File(...)):
     Returns:
         JSON with base64-encoded images for gradcam and gradcam++ methods
     """
-    if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File must be an image")
+    # Validate file type - allow TIFF and octet-stream
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    
+    valid_content_types = ["image/", "application/octet-stream"]
+    valid_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff"]
+    
+    is_valid = (
+        any(content_type.startswith(ct) for ct in valid_content_types) or
+        any(filename.lower().endswith(ext) for ext in valid_extensions)
+    )
+    
+    if not is_valid:
+        raise HTTPException(
+            status_code=400,
+            detail=f"File must be an image (JPEG, PNG, or TIFF). Got: {content_type}"
+        )
     
     try:
         contents = await file.read()

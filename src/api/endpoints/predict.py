@@ -58,19 +58,30 @@ async def predict(
         - clinical_recommendation: Text recommendation
     """
     # Validate file type
-    if not file.content_type.startswith("image/"):
+    content_type = file.content_type or ""
+    filename = file.filename or ""
+    
+    valid_content_types = ["image/", "application/octet-stream", "application/dicom"]
+    valid_extensions = [".jpg", ".jpeg", ".png", ".tif", ".tiff", ".dcm", ".dicom"]
+    
+    is_valid = (
+        any(content_type.startswith(ct) for ct in valid_content_types) or
+        any(filename.lower().endswith(ext) for ext in valid_extensions)
+    )
+    
+    if not is_valid:
         raise HTTPException(
             status_code=400,
-            detail="File must be an image"
+            detail="File must be an image (JPEG, PNG, TIFF, or DICOM)"
         )
     
     # Validate mc_samples
     mc_samples = max(10, min(100, mc_samples))  # Clamp to 10-100
     
     try:
-        # Read image
+        # Read image (with DICOM support)
         contents = await file.read()
-        image = await read_image_from_bytes(contents)
+        image = await read_image_from_bytes(contents, filename)
         
         # Validate histopathology similarity
         if not is_histopathology_like(image):
