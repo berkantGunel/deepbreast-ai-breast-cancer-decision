@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile
     container_name: deepbreast-backend
     user: "root" # Fix for Read-only file system errors
+    platform: linux/amd64 # Ensure consistency across Windows and Mac (Rosetta)
     restart: unless-stopped
     ports:
       - "8000:8000"
