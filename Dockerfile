@@ -24,6 +24,8 @@ COPY requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir --user -r requirements.txt
+# Explicitly install uvicorn to ensure it's available
+RUN pip install --no-cache-dir --user uvicorn
 
 # Stage 2: Production
 FROM python:3.11-slim as production
@@ -65,5 +67,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
 
-# Run the application
+# Run the application using the full path to uvicorn if needed, or module
 CMD ["python", "-m", "uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
