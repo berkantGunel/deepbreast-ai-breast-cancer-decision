@@ -23,7 +23,9 @@ RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements and install
 # "Anti-Gravity" installation: Explicitly install critical core dependencies
-# to ensure the backend starts even if requirements.txt has issues.
+# Set permissions and use root (Fix for Read-only file system errors)
+USER root
+RUN chmod -R 777 /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
     uvicorn gunicorn fastapi sqlalchemy pydantic pydantic-settings \

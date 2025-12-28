@@ -8,6 +8,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: deepbreast-backend
+    user: "root" # Fix for Read-only file system errors
     restart: unless-stopped
     ports:
       - "8000:8000"
