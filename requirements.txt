@@ -7,6 +7,7 @@ pandas
 matplotlib
 tqdm
 scikit-learn
+scikit-image
 opencv-python-headless
 streamlit
 pillow
