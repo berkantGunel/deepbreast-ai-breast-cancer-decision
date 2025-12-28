@@ -99,12 +99,18 @@ def preprocess_image(image: np.ndarray, target_size: int = 256) -> torch.Tensor:
     image = cv2.resize(image, (target_size, target_size), interpolation=cv2.INTER_LINEAR)
     
     # Normalize
+    # Normalize
     image = image.astype(np.float32)
     if image.max() > 1.0:
         image = image / 255.0
     
-    # Standardize
-    image = (image - 0.5) / 0.5
+    # Ensure background is truly 0 (simple thresholding to remove low-level noise)
+    # This helps prevents the model from segmenting the background noise
+    image[image < 0.05] = 0
+    
+    # Standardize - Using simple 0-1 range is often more robust across different environments
+    # than (x-0.5)/0.5 which can cause issues if distribution isn't perfectly centered
+    # image = (image - 0.5) / 0.5  # Comments out aggressive standardization
     
     # Convert to tensor
     tensor = torch.from_numpy(image).float().unsqueeze(0).unsqueeze(0)
