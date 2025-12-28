@@ -1,14 +1,12 @@
 # DeepBreast AI - Docker Compose Configuration
 # Run with: docker-compose up -d
 
-version: '3.8'
-
 services:
   # Backend - FastAPI with PyTorch
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     container_name: deepbreast-backend
     restart: unless-stopped
     ports:
@@ -34,8 +32,8 @@ services:
   # Frontend - React/Vite with Nginx
   frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.frontend
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: deepbreast-frontend
     restart: unless-stopped
     ports:
