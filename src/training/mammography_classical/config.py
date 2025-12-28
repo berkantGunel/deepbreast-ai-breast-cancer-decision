@@ -76,6 +76,13 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.2
 CV_FOLDS = 5
 
-# Create directories if not exist
-os.makedirs(PROCESSED_DIR, exist_ok=True)
-os.makedirs(MODELS_DIR, exist_ok=True)
+# Create directories if not exist (skip if read-only, e.g., in Docker)
+try:
+    os.makedirs(PROCESSED_DIR, exist_ok=True)
+except OSError:
+    pass  # Read-only filesystem in Docker
+
+try:
+    os.makedirs(MODELS_DIR, exist_ok=True)
+except OSError:
+    pass  # Read-only filesystem in Docker
