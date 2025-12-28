@@ -91,16 +91,32 @@ def get_mammography_model_cached():
     global _mammography_model, _device
     
     if _mammography_model is None:
-        _device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        _device = torch.device("cpu") # Force CPU for Docker compatibility
+        print(f"Loading mammography model on {_device}...")
+        
         _mammography_model = get_mammography_model(pretrained=False, num_classes=3)
         
-        # Load trained weights
+        # Load trained weights - CRITICAL: Fail if missing
         model_path = Path("models/best_mammography_model.pth")
-        if model_path.exists():
-            _mammography_model.load_state_dict(torch.load(model_path, map_location=_device))
+        
+        if not model_path.exists():
+             # Try alternate path if running from root vs src
+            alt_path = Path("models/mammography/best_mammography_model.pth")
+            if alt_path.exists():
+                model_path = alt_path
+            else:
+                print(f"❌ CRITICAL ERROR: Mammography model not found at {model_path}")
+                print(f"   Current dir: {Path.cwd()}")
+                raise RuntimeError(f"Mammography model file not found: {model_path}. Please download the model.")
+
+        try:
+            # Force CPU map_location
+            checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+            _mammography_model.load_state_dict(checkpoint)
             print(f"✅ Loaded mammography model from {model_path}")
-        else:
-            print(f"⚠️ Model not found at {model_path}, using random weights")
+        except Exception as e:
+            print(f"⚠ Error loading mammography weights: {e}")
+            raise RuntimeError(f"Failed to load mammography model weights: {e}")
         
         _mammography_model.to(_device)
         _mammography_model.eval()
