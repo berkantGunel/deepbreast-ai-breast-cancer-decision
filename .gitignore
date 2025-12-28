@@ -81,5 +81,8 @@ desktop.ini
 temp_*.png
 test_*.png
 *.tmp
-test_samples/
+
+# Clearly allow test samples folder
+!data/test_samples/
+!data/test_samples/**/*
 
