@@ -22,9 +22,12 @@ WORKDIR /app
 RUN pip install --no-cache-dir --upgrade pip
 
 # Copy requirements and install
-# Installing uvicorn/gunicorn explicitly to ensure availability in path
+# "Anti-Gravity" installation: Explicitly install critical core dependencies
+# to ensure the backend starts even if requirements.txt has issues.
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt uvicorn gunicorn
+RUN pip install --no-cache-dir -r requirements.txt \
+    uvicorn gunicorn fastapi sqlalchemy pydantic pydantic-settings \
+    python-multipart python-jose[cryptography] passlib[bcrypt] alembic python-dotenv
 
 # Copy application code
 COPY src/ ./src/

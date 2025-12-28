@@ -1,5 +1,4 @@
-# Core dependencies required for data preparation, training, explainability,
-# and the Streamlit user interface.
+# Core dependencies required for data preparation, training, explainability
 torch
 torchvision
 numpy
@@ -7,7 +6,7 @@ pandas
 matplotlib
 tqdm
 scikit-learn
-opencv-python
+opencv-python-headless
 streamlit
 pillow
 plotly
@@ -16,8 +15,15 @@ reportlab
 # DICOM support
 pydicom
 
-# FastAPI dependencies
+# FastAPI & Backend Infrastructure (Anti-Gravity Pack)
 fastapi>=0.68.0
 uvicorn[standard]>=0.15.0
 gunicorn>=20.1.0
-python-multipart>=0.0.5
+python-multipart
+sqlalchemy
+pydantic
+pydantic-settings
+python-jose[cryptography]
+passlib[bcrypt]
+alembic
+python-dotenv
