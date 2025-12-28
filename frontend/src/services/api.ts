@@ -910,7 +910,6 @@ const getNextSteps = (riskLevel: string, pathologyName: string): string[] => {
 // Predict mammography using Classical ML model
 export const predictMammography = async (
   file: File,
-  skipValidation: boolean = false,
   language: string = "en"
 ): Promise<MammographyPredictionResponse> => {
   const formData = new FormData();

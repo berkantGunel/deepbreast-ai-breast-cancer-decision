@@ -15,7 +15,7 @@ function MammographyPredict() {
     const [prediction, setPrediction] =
         useState<MammographyPredictionResponse | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
-    const [previewLoading, setPreviewLoading] = useState<boolean>(false);
+
     const [error, setError] = useState<string | null>(null);
     const [dragActive, setDragActive] = useState<boolean>(false);
     const [viewMode, setViewMode] = useState<'simple' | 'zoom' | 'annotate'>('simple');
@@ -33,7 +33,6 @@ function MammographyPredict() {
         const needsServerPreview = isTiff || isDicom;
 
         if (needsServerPreview) {
-            setPreviewLoading(true);
             try {
                 const response = await getMammographyPreview(file);
                 if (response.success && response.image) {
@@ -45,8 +44,6 @@ function MammographyPredict() {
                 console.error("Preview error:", err);
                 showToast("Could not generate preview for this file format, but you can still run analysis.", "warning");
                 // Set a placeholder or generic icon if preview fails
-            } finally {
-                setPreviewLoading(false);
             }
         } else {
             // Standard image formats
@@ -95,7 +92,7 @@ function MammographyPredict() {
         setError(null);
 
         try {
-            const result = await predictMammography(selectedFile, false, "en");
+            const result = await predictMammography(selectedFile, "en");
             setPrediction(result);
 
             const pathologyName = result.pathology_classification?.name || result.prediction;
